@@ -1,7 +1,7 @@
 import streamlit as st
-from modules import resp_sonic
 import sys
 import os
+from modules import resp_sonic
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -51,7 +51,7 @@ st.sidebar.success(f"Aktif Modül: {choice}") # Hangi modülde olduğunuzu yeşi
 st.sidebar.title("🛡️ EVEYES 360")
 st.sidebar.subheader("Clinical Intelligence Hub")
 
-menu = ["🏠 Home / Dashboard", "Metabolic-360", "Neuro-Guard", "Pediatric-Pro", "Derma-Scan"]
+menu = ["🏠 Dashboard", "Metabolic-360", "Neuro-Guard", "Pediatric-Pro", "Derma-Scan", "Resp-Sonic"]
 choice = st.sidebar.selectbox("Select Health Package", menu)
 
 # --- ANA SAYFA (HOS GELDINIZ) ---
@@ -74,10 +74,11 @@ if choice == "🏠 Home / Dashboard":
         st.warning("### 🧠 Neuro-Guard\n**Focus:** Movement Disorders.\n- AI Gait Analysis\n- Tremor Frequency Tracking\n- Fall Risk Assessment")
 
     with col2:
+
         st.success("### 👶 Pediatric-Pro\n**Focus:** Child Development.\n- WHO Growth Percentiles\n- M-CHAT Autism Screening\n- Developmental Milestones")
         st.error("### 🤳 Derma-Scan\n**Focus:** Skin & Wound Vision.\n- Diabetic Foot Monitoring\n- ABCDE Mole Analysis\n- Healing Progress Tracking")
-
     st.divider()
+    st.help("### 🫁 Resp-Sonic\n* Cough & Breath Sound Analysis\n* Visual Throat & Chest Inspection")
     st.write("📞 **Need Help?** Contact your physician or our technical support via the secure clinical channel.")
 
 # --- MODÜL YÖNLENDİRMELERİ ---
