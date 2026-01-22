@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 
-def show_pediatric():  # <--- Hata buradaki isim uyumsuzluğundan kaynaklanıyor
+def show_pediatric():
     st.title("👶 Pediatric-Pro: Growth & Development")
     st.write("Physical Growth Tracking & Autism Screening (M-CHAT)")
 
@@ -15,18 +14,31 @@ def show_pediatric():  # <--- Hata buradaki isim uyumsuzluğundan kaynaklanıyor
         weight = c2.number_input("Weight (kg)", value=10.0)
         height = c3.number_input("Height (cm)", value=75.0)
         
-        # Basit bir persentil grafiği simülasyonu
-        fig, ax = plt.subplots()
-        ax.plot([0, 12, 24, 36], [3, 10, 13, 15], label="Normal Growth")
-        ax.scatter([age], [weight], color='red', label="Current Child")
-        ax.legend()
-        st.pyplot(fig)
+        # Grafik için veri hazırlığı (Matplotlib yerine Streamlit Chart)
+        chart_data = pd.DataFrame({
+            "Months": [0, 12, 24, 36, 48, 60],
+            "Normal Weight (kg)": [3.5, 10, 12.5, 14.5, 16.5, 18.5],
+            "Child Weight (kg)": [3.5, weight if age == 12 else 10, 12.5, 14.5, 16.5, 18.5]
+        })
+        st.line_chart(chart_data.set_index("Months"))
+        st.info("💡 Red line indicates the average growth percentile.")
 
     with tab2:
         st.subheader("M-CHAT: Autism Early Warning")
-        q1 = st.radio("Does your child look you in the eye?", ["Yes", "No"])
-        if st.button("Calculate Risk"):
-            if q1 == "No":
-                st.warning("Potential risk detected. Consult a specialist.")
+        st.write("Please answer the following questions based on the child's behavior.")
+        
+        q1 = st.radio("Does your child look you in the eye?", ["Yes", "No"], key="q1")
+        q2 = st.radio("Does your child point to things he/she wants?", ["Yes", "No"], key="q2")
+        
+        if st.button("Calculate Development Risk"):
+            if q1 == "No" or q2 == "No":
+                st.warning("⚠️ **Risk detected.** Further clinical evaluation is recommended.")
             else:
-                st.success("Development appears normal.")
+                st.success("✅ Development appears within normal range for this age.")
+
+    # WhatsApp Raporlama
+    st.divider()
+    if st.button("📲 Send Report to Pediatrician"):
+        report = f"Pediatric Report - Age: {age}mo, Weight: {weight}kg, Height: {height}cm"
+        encoded_report = report.replace(" ", "%20")
+        st.markdown(f'[🟢 WhatsApp Report](https://wa.me/905XXXXXXXXX?text={encoded_report})', unsafe_allow_html=True)
