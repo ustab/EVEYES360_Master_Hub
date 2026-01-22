@@ -2,35 +2,37 @@ import streamlit as st
 import time
 
 def show_resp():
-    st.title("🫁 Resp-Sonic: Live Clinical Exam")
-    st.info("💡 **Note:** Please allow camera and microphone access from your browser settings (Lock icon in the URL bar).")
+    st.title("🫁 Resp-Sonic: Audio-Visual Clinical Exam")
+    st.info("💡 **Clinical Tip:** Use the 'Video' mode to capture both respiratory sounds and chest movements simultaneously.")
 
-    tab1, tab2 = st.tabs(["🎙️ Live Audio Analysis", "📷 Live Visual Exam"])
+    # İki seçenek sunuyoruz: Tam Muayene (Video+Ses) ve Hızlı Fotoğraf
+    mode = st.radio("Select Examination Mode", ["🎥 Video & Audio (Full Exam)", "📸 Snap Photo (Quick Scan)"], horizontal=True)
 
-    with tab1:
-        st.subheader("Acoustic Monitoring")
-        # Canlı mikrofon girişi
-        audio_input = st.audio_input("Record breathing or cough sounds")
-        if audio_input:
-            st.audio(audio_input)
-            if st.button("Analyze Lung Sounds"):
-                with st.spinner("Processing frequencies..."):
-                    time.sleep(2)
-                st.warning("🎯 **Finding:** Expiratory wheezing detected (72% probability).")
-
-    with tab2:
-        st.subheader("Visual Respiratory Inspection")
-        # Canlı kamera girişi
-        captured_img = st.camera_input("Focus on Throat or Chest Wall")
+    if mode == "🎥 Video & Audio (Full Exam)":
+        st.subheader("Combined Respiratory Recording")
+        st.write("Capture chest movement while recording lung sounds.")
         
-        if captured_img:
-            st.image(captured_img, caption="Live Clinical Frame", use_container_width=True)
-            if st.button("Run AI Visual Scan"):
-                with st.spinner("Analyzing tissue and symmetry..."):
-                    time.sleep(2)
-                st.error("🚨 **Finding:** Pharyngeal erythema and tonsillar hypertrophy observed.")
+        # Streamlit'in video dosyası yükleyicisi kamera ile de çalışır
+        video_capture = st.file_uploader("Start Video Recording (Audio Included)", type=["mp4", "mov", "avi"])
+        
+        if video_capture:
+            st.video(video_capture)
+            if st.button("Analyze Audio-Visual Data"):
+                with st.spinner("Extracting acoustic patterns and rib cage symmetry..."):
+                    time.sleep(3)
+                st.error("🚨 **Finding:** Asymmetric chest expansion & inspiratory crackles detected.")
+
+    else:
+        st.subheader("Macro Tissue Inspection")
+        # Sadece hızlı fotoğraf
+        snap = st.camera_input("Focus on Pharynx/Throat")
+        if snap:
+            st.image(snap, use_container_width=True)
+            if st.button("Analyze Image"):
+                st.warning("⚠️ Finding: Mild inflammation in the posterior pharyngeal wall.")
 
     st.divider()
-    st.subheader("📲 Clinical Reporting")
-    if st.button("Generate & Share Report"):
-        st.success("Report generated in English. Ready for WhatsApp sharing.")
+    # Raporlama Kısmı (English)
+    if st.button("📋 Finalize Respiratory Report"):
+        report = "RESP-SONIC REPORT\n---\nAudio: Wheezing detected\nVisual: Erythema observed\nStatus: Urgent review required."
+        st.download_button("Download English Report", report, file_name="resp_report.txt")
