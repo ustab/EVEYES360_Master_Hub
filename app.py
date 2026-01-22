@@ -1,63 +1,74 @@
 import streamlit as st
 from modules import metabolic, neuro, pediatric, derma, resp_sonic
-import sys
-import os
-from modules import resp_sonic
 
-# 1. Sayfa Ayarları
-st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide", page_icon="🏥")
+# 1. Sayfa Konfigürasyonu
+st.set_page_config(page_title="EVEYES 360", layout="wide", page_icon="🏥")
 
-# 2. DİL SÖZLÜĞÜ (Tüm ifadeler burada toplanır)
+# 2. Dil Sözlüğü (Tüm metinleri tek yerden yönetiyoruz)
 languages = {
     "Türkçe": {
-        "menu_title": "Klinik Modül Seçin",
-        "dashboard": "🏠 Dashboard",
+        "menu_title": "Klinik Modül",
+        "dash_name": "🏠 Dashboard",
         "welcome": "🏥 EVEYES 360 Klinik Merkez",
         "subtitle": "Klinik analize başlamak için soldan bir modül seçin.",
-        "met_desc": "### ⚖️ Metabolic-360\n* Ödem Takibi\n* Kaşeksi İzleme",
-        "neu_desc": "### 🧠 Neuro-Guard\n* Yürüyüş Analizi\n* Titreşim Frekansı",
-        "ped_desc": "### 👶 Pediatric-Pro\n* M-CHAT Tarama\n* Büyüme Analitiği",
-        "der_desc": "### 🤳 Derma-Scan\n* Yara İzleme\n* Ben Analizi",
-        "res_desc": "### 🫁 Resp-Sonic\n* Ses ve Görüntü Analizi\n* Öksürük & Boğaz Muayenesi"
+        "met": "### ⚖️ Metabolic-360\n* Ödem ve Kaşeksi Takibi",
+        "neu": "### 🧠 Neuro-Guard\n* Yürüyüş ve Titreşim Analizi",
+        "ped": "### 👶 Pediatric-Pro\n* M-CHAT ve Büyüme Takibi",
+        "der": "### 🤳 Derma-Scan\n* Yara ve Ben Analizi",
+        "res": "### 🫁 Resp-Sonic\n* Ses ve Görüntü Muayenesi"
     },
     "English": {
-        "menu_title": "Select Clinical Module",
-        "dashboard": "🏠 Dashboard",
+        "menu_title": "Clinical Module",
+        "dash_name": "🏠 Dashboard",
         "welcome": "🏥 EVEYES 360 Clinical Hub",
         "subtitle": "Select a module from the sidebar to start analysis.",
-        "met_desc": "### ⚖️ Metabolic-360\n* Edema Tracking\n* Cachexia Monitoring",
-        "neu_desc": "### 🧠 Neuro-Guard\n* Gait Analysis\n* Tremor Frequency",
-        "ped_desc": "### 👶 Pediatric-Pro\n* M-CHAT Screening\n* Growth Analytics",
-        "der_desc": "### 🤳 Derma-Scan\n* Wound Monitoring\n* Mole Analysis",
-        "res_desc": "### 🫁 Resp-Sonic\n* Audio-Visual Analysis\n* Cough & Throat Inspection"
+        "met": "### ⚖️ Metabolic-360\n* Edema & Cachexia Tracking",
+        "neu": "### 🧠 Neuro-Guard\n* Gait & Tremor Analysis",
+        "ped": "### 👶 Pediatric-Pro\n* M-CHAT & Growth Tracking",
+        "der": "### 🤳 Derma-Scan\n* Wound & Mole Analysis",
+        "res": "### 🫁 Resp-Sonic\n* Audio-Visual Inspection"
     }
 }
 
-# 3. DİL SEÇİMİ (Sidebar'ın en üstünde)
-lang_choice = st.sidebar.radio("🌐 Language / Dil", ["Türkçe", "English"], horizontal=True)
-t = languages[lang_choice] # Seçilen dilin paketini yükle
+# 3. Sidebar: Dil Seçimi
+lang = st.sidebar.radio("🌐 Language / Dil", ["Türkçe", "English"], horizontal=True)
+t = languages[lang]
 
-# 4. MENÜ
-menu = [t["dashboard"], "Metabolic-360", "Neuro-Guard", "Pediatric-Pro", "Derma-Scan", "Resp-Sonic"]
+# 4. Sidebar: Menü Seçimi
+# NOT: Menü isimleri sabit kalmalı ki modülleri çağırırken hata olmasın
+menu = [t["dash_name"], "Metabolic-360", "Neuro-Guard", "Pediatric-Pro", "Derma-Scan", "Resp-Sonic"]
 choice = st.sidebar.selectbox(t["menu_title"], menu)
 
-# 5. İÇERİK MANTIĞI
-if choice == t["dashboard"]:
+# 5. Sayfa İçerikleri (Hangi modülün açılacağını burası belirler)
+if choice == t["dash_name"]:
     st.title(t["welcome"])
     st.write(t["subtitle"])
-    st.markdown("---")
+    st.divider()
     
     col1, col2 = st.columns(2)
     with col1:
-        st.info(t["met_desc"])
-        st.warning(t["neu_desc"])
+        st.info(t["met"])
+        st.warning(t["neu"])
     with col2:
-        st.success(t["ped_desc"])
-        st.error(t["der_desc"])
+        st.success(t["ped"])
+        st.error(t["der"])
     
     st.divider()
-    st.help(t["res_desc"])
+    st.help(t["res"])
 
+# BURASI ÇOK ÖNEMLİ: Menüdeki isimle alttakiler birebir aynı olmalı
 elif choice == "Metabolic-360":
     metabolic.show_metabolic()
-# ... Diğer elif blokları aynı şekilde devam eder ...
+
+elif choice == "Neuro-Guard":
+    neuro.show_neuro()
+
+elif choice == "Pediatric-Pro":
+    pediatric.show_pediatric()
+
+elif choice == "Derma-Scan":
+    derma.show_derma()
+
+elif choice == "Resp-Sonic":
+    resp_sonic.show_resp()
+
