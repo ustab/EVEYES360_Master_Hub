@@ -1,16 +1,16 @@
 import streamlit as st
 from modules import metabolic, neuro, pediatric, derma, resp_sonic
 
-# 1. Sayfa Konfigürasyonu
-st.set_page_config(page_title="EVEYES 360", layout="wide", page_icon="🏥")
+# 1. Sayfa Ayarları
+st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide", page_icon="🏥")
 
-# 2. Dil Sözlüğü (Tüm metinleri tek yerden yönetiyoruz)
+# 2. Dil Sözlüğü
 languages = {
     "Türkçe": {
         "menu_title": "Klinik Modül",
         "dash_name": "🏠 Dashboard",
         "welcome": "🏥 EVEYES 360 Klinik Merkez",
-        "subtitle": "Klinik analize başlamak için soldan bir modül seçin.",
+        "subtitle": "Klinik analize başlamak için bir modül seçin.",
         "met": "### ⚖️ Metabolic-360\n* Ödem ve Kaşeksi Takibi",
         "neu": "### 🧠 Neuro-Guard\n* Yürüyüş ve Titreşim Analizi",
         "ped": "### 👶 Pediatric-Pro\n* M-CHAT ve Büyüme Takibi",
@@ -21,7 +21,7 @@ languages = {
         "menu_title": "Clinical Module",
         "dash_name": "🏠 Dashboard",
         "welcome": "🏥 EVEYES 360 Clinical Hub",
-        "subtitle": "Select a module from the sidebar to start analysis.",
+        "subtitle": "Select a module to start clinical analysis.",
         "met": "### ⚖️ Metabolic-360\n* Edema & Cachexia Tracking",
         "neu": "### 🧠 Neuro-Guard\n* Gait & Tremor Analysis",
         "ped": "### 👶 Pediatric-Pro\n* M-CHAT & Growth Tracking",
@@ -30,49 +30,41 @@ languages = {
     }
 }
 
-# 3. Sidebar: Dil Seçimi
+# 3. Sidebar: Dil ve Menü
 lang = st.sidebar.radio("🌐 Language / Dil", ["Türkçe", "English"], horizontal=True)
 t = languages[lang]
 
-# 4. Sidebar: Menü Seçimi
-# NOT: Menü isimleri sabit kalmalı ki modülleri çağırırken hata olmasın
 menu = [t["dash_name"], "Metabolic-360", "Neuro-Guard", "Pediatric-Pro", "Derma-Scan", "Resp-Sonic"]
 choice = st.sidebar.selectbox(t["menu_title"], menu)
 
-# 5. Sayfa İçerikleri (Hangi modülün açılacağını burası belirler)
+# 4. Dashboard (Ana Ekran) Tasarımı
 if choice == t["dash_name"]:
     st.title(t["welcome"])
     st.write(t["subtitle"])
     st.divider()
-    # 3 Sütunlu düzen (Daha dengeli görünür)
+    
+    # 3 Sütunlu 5'li Kutular
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.info(t["met"])    # Metabolic
-        st.error(t["der"])   # Derma
+        st.info(t["met"])
+        st.error(t["der"])
         
     with col2:
-        st.warning(t["neu"]) # Neuro
-        st.help(t["res"])    # Resp-Sonic (Şimdi diğerleriyle aynı hizada)
+        st.warning(t["neu"])
+        st.help(t["res"])    # İŞTE BURADA: Resp-Sonic artık ana ekranda!
 
     with col3:
-        st.success(t["ped"]) # Pediatric
+        st.success(t["ped"])
 
-# BURASI ÇOK ÖNEMLİ: Menüdeki isimle alttakiler birebir aynı olmalı
+# 5. Modül Çağırmaları
 elif choice == "Metabolic-360":
     metabolic.show_metabolic()
-
 elif choice == "Neuro-Guard":
     neuro.show_neuro()
-
 elif choice == "Pediatric-Pro":
     pediatric.show_pediatric()
-
 elif choice == "Derma-Scan":
     derma.show_derma()
-
 elif choice == "Resp-Sonic":
     resp_sonic.show_resp()
-
-
-
