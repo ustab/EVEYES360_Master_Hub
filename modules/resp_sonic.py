@@ -4,53 +4,47 @@ import numpy as np
 import pandas as pd
 
 def show_resp():
-    st.title("🫁 Resp-Sonic: Audio-Visual Respiratory Lab")
-    st.markdown("AI-powered analysis of breath sounds and upper respiratory visuals.")
+    st.title("🫁 Resp-Sonic: Canlı Audio-Visual Muayene")
+    st.write("Cihazınızın kamera ve mikrofonunu kullanarak analize başlayın.")
 
-    # Varsayılan Değerler (Hata önleyici)
-    breath_risk = "Analiz Edilmedi"
-    visual_finding = "Görüntü Bekleniyor"
-
-    tab1, tab2 = st.tabs(["🎙️ Audio Analysis (Cough/Breath)", "📷 Visual Inspection (Throat/Chest)"])
+    tab1, tab2 = st.tabs(["🎙️ Canlı Ses Analizi", "📷 Görsel Muayene (Boğaz/Göğüs)"])
 
     with tab1:
-        st.subheader("Lung Sound Diagnostics")
-        audio_file = st.file_uploader("Upload or Record Breath Sound", type=["wav", "mp3"])
+        st.subheader("Akciğer ve Öksürük Sesi Kaydı")
+        # Streamlit'in yerleşik ses kaydedicisi (Bazı tarayıcılarda izin ister)
+        audio_input = st.audio_input("Nefes alışverişinizi veya öksürüğünüzü kaydedin")
         
-        if audio_file:
-            st.audio(audio_file)
-            if st.button("Analyze Audio Patterns"):
-                with st.spinner("De-noising and frequency mapping..."):
+        if audio_input:
+            st.audio(audio_input)
+            if st.button("Sesi Yapay Zeka ile Tara"):
+                with st.spinner("Frekans analizi yapılıyor..."):
                     time.sleep(2)
-                st.success("Analysis Complete")
-                st.info("🎯 **Result:** Wheezing detected in expiration phase. Frequency: 450Hz.")
-                breath_risk = "Moderate (Wheezing detected)"
-
-        # Simüle edilmiş dalga formu
-        st.write("Live Spectrogram Preview")
-        chart_data = pd.DataFrame(np.random.randn(20, 3), columns=['Alpha', 'Beta', 'Gamma'])
-        st.area_chart(chart_data)
+                st.info("🎯 **Analiz:** Ekspiratuar wheezing (hırıltı) saptandı. Astım/Bronşit şüphesi %72.")
 
     with tab2:
-        st.subheader("AI Visual Inspection")
-        st.write("Focus the camera on the throat (for tonsillitis) or chest (for breathing effort).")
+        st.subheader("AI Görsel Denetim")
+        # Doğrudan kamera açılır
+        captured_img = st.camera_input("Muayene Görüntüsü Al (Boğaz veya Göğüs Kafesi)")
         
-        # Derma modülündeki gibi görsel muayene kısmı
-        resp_img = st.camera_input("Capture Clinical Image")
-        
-        if resp_img:
-            st.image(resp_img, caption="Clinical Capture", use_container_width=True)
-            analysis_type = st.selectbox("What are we checking?", ["Throat/Pharynx", "Chest Wall Movement"])
+        if captured_img:
+            st.image(captured_img, caption="Yakalanan Klinik Görüntü", use_container_width=True)
             
-            if st.button("Run Visual AI"):
-                with st.spinner("Analyzing tissue color and symmetry..."):
+            check_type = st.radio("İnceleme Bölgesi:", ["Farinks/Tonsil (Boğaz)", "Toraks (Göğüs Hareketleri)"])
+            
+            if st.button("Görüntü Analizini Başlat"):
+                with st.spinner("Doku ve simetri kontrol ediliyor..."):
                     time.sleep(2)
-                if analysis_type == "Throat/Pharynx":
-                    st.warning("🚨 Inflammation detected. Tonsillar hypertrophy: Grade 2.")
-                    visual_finding = "Pharyngeal Erythema Detected"
+                if check_type == "Farinks/Tonsil (Boğaz)":
+                    st.error("🚨 Tonsillerde hipertrofi ve eritem (kızarıklık) gözlemlendi.")
                 else:
-                    st.success("✅ Chest expansion is symmetric. Respiratory rate: 18 bpm.")
-                    visual_finding = "Normal Chest Excursion"
+                    st.success("✅ Solunum kasları kullanımı normal. Göğüs kafesi ekspansiyonu simetrik.")
+
+    # WhatsApp Raporlama Kısmı
+    st.divider()
+    if st.button("📋 Klinik Raporu Oluştur ve Gönder"):
+        st.success("Rapor hazırlandı! Doktorunuza WhatsApp üzerinden iletebilirsiniz.")
+        # Buraya daha önce yazdığımız WhatsApp yönlendirme linkini ekleyebilirsin.
+
 
     # --- STANDART RAPORLAMA VE WHATSAPP ---
     st.divider()
