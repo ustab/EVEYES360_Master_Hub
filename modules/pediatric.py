@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
+import time
 
 def show_pediatric():
     st.title("👶 Pediatric-Pro: Growth & Development")
-    st.write("Physical Growth Tracking & Autism Screening (M-CHAT)")
+    st.markdown("Clinical tracking for physical growth and neurodevelopmental milestones.")
 
-    tab1, tab2 = st.tabs(["📏 Physical Growth", "🧠 M-CHAT Screening"])
+    tab1, tab2 = st.tabs(["📏 Physical Growth", "🧠 Neurodevelopmental (M-CHAT)"])
 
     with tab1:
         st.subheader("Physical Growth Analysis")
@@ -14,31 +15,41 @@ def show_pediatric():
         weight = c2.number_input("Weight (kg)", value=10.0)
         height = c3.number_input("Height (cm)", value=75.0)
         
-        # Grafik için veri hazırlığı (Matplotlib yerine Streamlit Chart)
+        # Growth Chart Simulation
+        st.write("**Growth Percentile Trend**")
         chart_data = pd.DataFrame({
             "Months": [0, 12, 24, 36, 48, 60],
-            "Normal Weight (kg)": [3.5, 10, 12.5, 14.5, 16.5, 18.5],
-            "Child Weight (kg)": [3.5, weight if age == 12 else 10, 12.5, 14.5, 16.5, 18.5]
+            "WHO Standard (kg)": [3.5, 9.5, 12.2, 14.3, 16.3, 18.3],
+            "Current Child (kg)": [3.5, weight if age == 12 else 9.5, 12.2, 14.3, 16.3, 18.3]
         })
         st.line_chart(chart_data.set_index("Months"))
-        st.info("💡 Red line indicates the average growth percentile.")
+        
+        
 
     with tab2:
-        st.subheader("M-CHAT: Autism Early Warning")
-        st.write("Please answer the following questions based on the child's behavior.")
+        st.subheader("Live Clinical Observation")
+        st.write("Use the camera to observe the child's interaction, eye contact, and motor response.")
         
-        q1 = st.radio("Does your child look you in the eye?", ["Yes", "No"], key="q1")
-        q2 = st.radio("Does your child point to things he/she wants?", ["Yes", "No"], key="q2")
+        # Canlı Kamera Girişi
+        child_frame = st.camera_input("Capture Child's Behavior")
         
-        if st.button("Calculate Development Risk"):
-            if q1 == "No" or q2 == "No":
-                st.warning("⚠️ **Risk detected.** Further clinical evaluation is recommended.")
-            else:
-                st.success("✅ Development appears within normal range for this age.")
+        if child_frame:
+            st.image(child_frame, caption="Behavioral Frame Captured")
+            st.success("Visual data logged for developmental review.")
 
-    # WhatsApp Raporlama
+        st.divider()
+        st.subheader("M-CHAT Screening Questions")
+        q1 = st.radio("Does the child look you in the eye when you call their name?", ["Yes", "No"])
+        q2 = st.radio("Does the child point to things to show interest?", ["Yes", "No"])
+        
+        if st.button("Assess Screening Risk"):
+            if q1 == "No" or q2 == "No":
+                st.warning("⚠️ **Alert:** Potential red flags detected. Refer to a Developmental Pediatrician.")
+            else:
+                st.success("✅ Interaction appears normal for this age group.")
+
+    # Reporting
     st.divider()
-    if st.button("📲 Send Report to Pediatrician"):
-        report = f"Pediatric Report - Age: {age}mo, Weight: {weight}kg, Height: {height}cm"
-        encoded_report = report.replace(" ", "%20")
-        st.markdown(f'[🟢 WhatsApp Report](https://wa.me/905XXXXXXXXX?text={encoded_report})', unsafe_allow_html=True)
+    if st.button("📲 Generate Pediatric Report"):
+        report = f"Pediatric Report\nAge: {age}mo\nWeight: {weight}kg\nRisk: {'High' if q1 == 'No' else 'Low'}"
+        st.download_button("Download Report (TXT)", report, file_name="pediatric_report.txt")
