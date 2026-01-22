@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import time
-from PIL import Image
 
 def show_neuro():
     st.title("🧠 Neuro-Guard: Mobility & Tremor Analytics")
@@ -10,7 +9,14 @@ def show_neuro():
     This module focuses on **Neuro-Degenerative diseases** (Parkinson's, MS, ALS). 
     It tracks patient motor skills using video gait analysis and tremor frequency detection.
     """)
+
     tab1, tab2 = st.tabs(["🚶 Gait Analysis (Yürüyüş)", "🖐️ Tremor Test (Titreme)"])
+
+import streamlit as st
+import pandas as pd
+import time
+from PIL import Image
+import numpy as np
 
 def show_derma():
     st.title("🤳 Derma-Scan: Vision-Based Wound & Mole Tracker")
@@ -65,8 +71,10 @@ def show_derma():
                 'Risk': ['Low', 'Low', 'Low', 'Low', 'Low']
             }))
             
-            st.success("✅ Overall Assessment: Low Risk. Suggest annual check-up."
-                       
+            st.success("✅ Overall Assessment: Low Risk. Suggest annual check-up.")
+import streamlit as st
+import pandas as pd
+import time
 
 def show_neuro():
     st.title("🧠 Neuro-Guard: Mobility & Tremor Analytics")
@@ -161,5 +169,4 @@ def show_neuro():
                 <div style="width: 100%; background-color: #25D366; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold;">
                     🟢 WhatsApp ile Nöroloğa Gönder
                 </div>
-
             </a>""", unsafe_allow_html=True)
