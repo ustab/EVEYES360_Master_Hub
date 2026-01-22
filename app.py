@@ -57,9 +57,6 @@ if choice == t["dash_name"]:
 
     with col3:
         st.success(t["ped"]) # Pediatric
-    
-    st.divider()
-    st.help(t["res"])
 
 # BURASI ÇOK ÖNEMLİ: Menüdeki isimle alttakiler birebir aynı olmalı
 elif choice == "Metabolic-360":
@@ -76,5 +73,6 @@ elif choice == "Derma-Scan":
 
 elif choice == "Resp-Sonic":
     resp_sonic.show_resp()
+
 
 
