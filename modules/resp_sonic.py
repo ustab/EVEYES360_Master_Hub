@@ -55,16 +55,4 @@ Visual Finding: {visual_finding}
 Timestamp: {time.strftime("%Y-%m-%d %H:%M")}
 """
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.download_button("📥 Respiratory Report Download", rapor_metni, file_name="resp_sonic_report.txt")
-    
-    with col2:
-        encoded_msg = rapor_metni.replace("\n", "%0A")
-        whatsapp_url = f"https://wa.me/905XXXXXXXXX?text={encoded_msg}"
-        st.markdown(f"""
-            <a href="{whatsapp_url}" target="_blank" style="text-decoration: none;">
-                <div style="width: 100%; background-color: #25D366; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold;">
-                    🟢 Send to Pulmonologist (WhatsApp)
-                </div>
-            </a>""", unsafe_allow_html=True)
+   
