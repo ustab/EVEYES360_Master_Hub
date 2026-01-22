@@ -44,14 +44,19 @@ if choice == t["dash_name"]:
     st.title(t["welcome"])
     st.write(t["subtitle"])
     st.divider()
+    # 3 Sütunlu düzen (Daha dengeli görünür)
+    col1, col2, col3 = st.columns(3)
     
-    col1, col2 = st.columns(2)
     with col1:
-        st.info(t["met"])
-        st.warning(t["neu"])
+        st.info(t["met"])    # Metabolic
+        st.error(t["der"])   # Derma
+        
     with col2:
-        st.success(t["ped"])
-        st.error(t["der"])
+        st.warning(t["neu"]) # Neuro
+        st.help(t["res"])    # Resp-Sonic (Şimdi diğerleriyle aynı hizada)
+
+    with col3:
+        st.success(t["ped"]) # Pediatric
     
     st.divider()
     st.help(t["res"])
@@ -71,4 +76,5 @@ elif choice == "Derma-Scan":
 
 elif choice == "Resp-Sonic":
     resp_sonic.show_resp()
+
 
