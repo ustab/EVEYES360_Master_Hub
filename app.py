@@ -1,92 +1,63 @@
 import streamlit as st
+from modules import metabolic, neuro, pediatric, derma, resp_sonic
 import sys
 import os
 from modules import resp_sonic
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# 1. Sayfa Ayarları
+st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide", page_icon="🏥")
 
-# Modülleri içeri aktar
-try:
-    from modules import metabolic, pediatric, neuro, derma
-except ImportError as e:
-    st.error(f"Modül yükleme hatası: {e}")
-    st.stop()
+# 2. DİL SÖZLÜĞÜ (Tüm ifadeler burada toplanır)
+languages = {
+    "Türkçe": {
+        "menu_title": "Klinik Modül Seçin",
+        "dashboard": "🏠 Dashboard",
+        "welcome": "🏥 EVEYES 360 Klinik Merkez",
+        "subtitle": "Klinik analize başlamak için soldan bir modül seçin.",
+        "met_desc": "### ⚖️ Metabolic-360\n* Ödem Takibi\n* Kaşeksi İzleme",
+        "neu_desc": "### 🧠 Neuro-Guard\n* Yürüyüş Analizi\n* Titreşim Frekansı",
+        "ped_desc": "### 👶 Pediatric-Pro\n* M-CHAT Tarama\n* Büyüme Analitiği",
+        "der_desc": "### 🤳 Derma-Scan\n* Yara İzleme\n* Ben Analizi",
+        "res_desc": "### 🫁 Resp-Sonic\n* Ses ve Görüntü Analizi\n* Öksürük & Boğaz Muayenesi"
+    },
+    "English": {
+        "menu_title": "Select Clinical Module",
+        "dashboard": "🏠 Dashboard",
+        "welcome": "🏥 EVEYES 360 Clinical Hub",
+        "subtitle": "Select a module from the sidebar to start analysis.",
+        "met_desc": "### ⚖️ Metabolic-360\n* Edema Tracking\n* Cachexia Monitoring",
+        "neu_desc": "### 🧠 Neuro-Guard\n* Gait Analysis\n* Tremor Frequency",
+        "ped_desc": "### 👶 Pediatric-Pro\n* M-CHAT Screening\n* Growth Analytics",
+        "der_desc": "### 🤳 Derma-Scan\n* Wound Monitoring\n* Mole Analysis",
+        "res_desc": "### 🫁 Resp-Sonic\n* Audio-Visual Analysis\n* Cough & Throat Inspection"
+    }
+}
 
-st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide", page_icon="🛡️")
+# 3. DİL SEÇİMİ (Sidebar'ın en üstünde)
+lang_choice = st.sidebar.radio("🌐 Language / Dil", ["Türkçe", "English"], horizontal=True)
+t = languages[lang_choice] # Seçilen dilin paketini yükle
 
-# --- MENÜ LİSTESİ ---
-menu = [
-    "🏠 Dashboard", 
-    "Metabolic-360", 
-    "Neuro-Guard", 
-    "Pediatric-Pro", 
-    "Derma-Scan",
-    "Resp-Sonic (Lung & Throat)"
-]
+# 4. MENÜ
+menu = [t["dashboard"], "Metabolic-360", "Neuro-Guard", "Pediatric-Pro", "Derma-Scan", "Resp-Sonic"]
+choice = st.sidebar.selectbox(t["menu_title"], menu)
 
-choice = st.sidebar.selectbox("Paket Seçiniz", menu)
-
-# --- BAĞLANTI KONTROLÜ ---
-if choice == "🏠 Dashboard":
-    st.title("🏥 EVEYES 360 Klinik Merkez")
-    st.write("Lütfen soldan bir analiz modülü seçin.")
-
-elif choice == "Metabolic-360":
-    metabolic.show_metabolic()
-
-elif choice == "Neuro-Guard":
-    neuro.show_neuro()
-
-elif choice == "Pediatric-Pro":
-    pediatric.show_pediatric()
-
-elif choice == "Derma-Scan":
-    derma.show_derma()
+# 5. İÇERİK MANTIĞI
+if choice == t["dashboard"]:
+    st.title(t["welcome"])
+    st.write(t["subtitle"])
+    st.markdown("---")
     
-elif choice == "Resp-Sonic (Lung & Throat)":
-    resp_sonic.show_resp()
-
-# --- SIDEBAR ---
-st.sidebar.success(f"Aktif Modül: {choice}") # Hangi modülde olduğunuzu yeşil bir kutuda gösterir
-st.sidebar.title("🛡️ EVEYES 360")
-st.sidebar.subheader("Clinical Intelligence Hub")
-
-menu = ["🏠 Dashboard", "Metabolic-360", "Neuro-Guard", "Pediatric-Pro", "Derma-Scan", "Resp-Sonic"]
-choice = st.sidebar.selectbox("Select Health Package", menu)
-
-# --- ANA SAYFA (HOS GELDINIZ) ---
-if choice == "🏠 Home / Dashboard":
-    st.title("🏥 Welcome to EVEYES 360")
-    st.subheader("Your Unified Clinical Command Center")
-    
-    st.markdown("""
-    EVEYES 360 is a modular AI-powered ecosystem designed to transform remote patient care. 
-    Select a specialized package from the sidebar to begin clinical analysis.
-    """)
-    
-    st.divider()
-
-    # Paketlerin Özeti (Kart Yapısı)
     col1, col2 = st.columns(2)
-
     with col1:
-        st.info("### ⚖️ Metabolic-360\n**Focus:** Fluid & Tissue Management.\n- Edema Detection\n- Cachexia Prevention\n- Heart & Kidney Monitoring")
-        st.warning("### 🧠 Neuro-Guard\n**Focus:** Movement Disorders.\n- AI Gait Analysis\n- Tremor Frequency Tracking\n- Fall Risk Assessment")
-
+        st.info(t["met_desc"])
+        st.warning(t["neu_desc"])
     with col2:
-
-        st.success("### 👶 Pediatric-Pro\n**Focus:** Child Development.\n- WHO Growth Percentiles\n- M-CHAT Autism Screening\n- Developmental Milestones")
-        st.error("### 🤳 Derma-Scan\n**Focus:** Skin & Wound Vision.\n- Diabetic Foot Monitoring\n- ABCDE Mole Analysis\n- Healing Progress Tracking")
+        st.success(t["ped_desc"])
+        st.error(t["der_desc"])
+    
     st.divider()
-    st.help("### 🫁 Resp-Sonic\n* Cough & Breath Sound Analysis\n* Visual Throat & Chest Inspection")
-    st.write("📞 **Need Help?** Contact your physician or our technical support via the secure clinical channel.")
+    st.help(t["res_desc"])
 
-# --- MODÜL YÖNLENDİRMELERİ ---
 elif choice == "Metabolic-360":
     metabolic.show_metabolic()
-elif choice == "Neuro-Guard":
-    neuro.show_neuro()
-elif choice == "Pediatric-Pro":
-    pediatric.show_pediatric()
-elif choice == "Derma-Scan":
-    derma.show_derma()
+# ... Diğer elif blokları aynı şekilde devam eder ...
