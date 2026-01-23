@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-# --- 1. CONFIGURATION & CLINICAL THEMING (Görselleştirme & Mobil Arayüz) ---
+#  1. CONFIGURATION & CLINICAL THEMING (Görselleştirme & Mobil Arayüz) ---
 st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide", page_icon="🏥")
 
 # Mobil Optimizasyon ve Klinik Tema için CSS
@@ -35,9 +35,8 @@ df = st.session_state.patient_db
 today = df.iloc[-1]
 yesterday = df.iloc[-2]
 
-# ==========================================
 # 3. SIDEBAR: MERKEZİ KONTROL (Hataları Çözen Bölüm)
-# ==========================================
+
 st.sidebar.title("🏥 EVEYES 360 Hub")
 
 # CSS: Siyah yazıları BEYAZ yapar (image_be5791 hatası çözümü)
@@ -116,10 +115,24 @@ if user_role == "Patient Portal":
             autism_check = st.radio("Social/Communication Interaction Status (Autism Screening):", ["Typical", "Atypical Observations"])
             
             submit = st.form_submit_button("💾 Process & Validate")
-            
-            if submit: # Akıllı İşleme: Hard Limits
-                if w > 200 or h < 50: st.warning("⚠️ High Deviation in measurements. Please re-verify.")
-                else: st.success("Data synced with clinical hub.")
+
+            if submit: 
+                # 1. Yeni veriyi mevcut satırdan kopyala (şablon olarak)
+                new_entry = today.copy()
+                
+                # 2. Formdaki yeni değerleri üzerine yaz
+                new_entry['Date'] = datetime.now().strftime('%Y-%m-%d')
+                new_entry['Weight'] = w_in
+                new_entry['Height'] = h_in
+                
+                # 3. Ana veritabanına (session_state) bu yeni satırı ekle
+                st.session_state.patient_db = pd.concat([
+                    st.session_state.patient_db, 
+                    pd.DataFrame([new_entry])
+                ], ignore_index=True)
+                
+                st.success("✅ Veri Kaydedildi! Grafikler Güncelleniyor...")
+                st.rerun() # Bu komut sayfayı yeniler ve yeni veriyi grafiğe işler
 
     with tabs[2]: # AI Vision Scan (Mood & Facial Analysis)
         st.subheader("📷 Patient Mood & Body Movement Analysis")
@@ -127,84 +140,68 @@ if user_role == "Patient Portal":
         st.camera_input("Facial & Posture Scan")
         st.file_uploader("Upload Gait/Movement Video", type=["mp4", "mov"])
 
- # ==========================================
-# 6. BRANŞ ÖZEL ANALİZ MOTORLARI
-# ==========================================
-
-# --- A. METABOLIC.PY MODÜLÜ (Diyabet & Obezite & Ödem) ---
-if branch == "Metabolic.py":
-    st.info("🧬 **Metabolic Analysis Mode Active**")
-    m1, m2, m3 = st.columns(3)
+ 
+# 4 & 5. BRANŞ ÖZEL ANALİZ MOTORLARI (SADECE SPECIALIST İÇİN)
+else: # Yani user_role == "Specialist Dashboard" ise
+    st.title(f"👨‍⚕️ {branch} Decision Support")
     
-    # Akıllı Parametre: BIA Ödem & Kaşeksi Analizi
-    # Taslağındaki 2. Madde: BIA_OEDEMA, BIA_CAHEXIA
-    w_trend = today['Weight'] - yesterday['Weight']
-    fat_trend = today['BIA_Fat'] - yesterday['BIA_Fat']
-    
-    if w_trend > 1.5 and fat_trend <= 0:
-        status = "🚨 OEDEMA RISK (High Weight / Stable Fat)"
-        color = "red"
-    elif w_trend < -2.0 and fat_trend < -0.5:
-        status = "⚠️ CACHEXIA RISK (Rapid Muscle/Fat Loss)"
-        color = "orange"
-    else:
-        status = "✅ Metabolic Stability"
-        color = "green"
-    
-    m1.metric("Metabolic Status", "Active", status)
-    m2.metric("BMI", f"{(today['Weight']/((today['Height']/100)**2)):.1f}")
-    m3.metric("Daily Weight Delta", f"{w_trend:+.1f} kg")
+    # --- A. METABOLIC.PY MODÜLÜ ---
+    if branch == "Metabolic.py":
+        st.info("🧬 **Metabolic Analysis Mode Active**")
+        m1, m2, m3 = st.columns(3)
+        w_trend = today['Weight'] - yesterday['Weight']
+        fat_trend = today['BIA_Fat'] - yesterday['BIA_Fat']
+        
+        status = "✅ Stable"
+        if w_trend > 1.5 and fat_trend <= 0: status = "🚨 OEDEMA RISK"
+        elif w_trend < -2.0: status = "⚠️ CACHEXIA RISK"
+        
+        m1.metric("Metabolic Status", status, f"{w_trend:+.1f}kg")
+        m2.metric("BMI Index", f"{(today['Weight']/((today['Height']/100)**2)):.1f}")
+        m3.metric("BIA Fat %", f"{today['BIA_Fat']}%", f"{fat_trend:+.1f}%")
+        st.line_chart(df.set_index('Date')[['Weight', 'BIA_Fat']])
 
-    # Boy-Kilo-Yaş İlişkili Büyüme Eğrisi Simülasyonu
-    st.subheader("📊 Growth & Metabolic Curve")
-    st.line_chart(df.set_index('Date')[['Weight', 'BIA_Fat']])
+    # --- B. NEURO.PY & PEDIATRICS MODÜLÜ ---
+    elif branch in ["Neuro.py", "Pediatrics", "Growth & Development"]:
+        st.info("🧠 **Neurological & Behavioral Monitor Active**")
+        n1, n2, n3 = st.columns(3)
+        mood = today['Mood_Score']
+        
+        n1.metric("Mood Score", f"{mood}/10", f"{mood-yesterday['Mood_Score']}")
+        n2.metric("Neuro-Symmetry", "94%", "Optimal")
+        n3.metric("Communication", "Typical" if mood > 5 else "Atypical")
+        
+        st.area_chart(df.set_index('Date')[['Mood_Score']])
 
-# --- B. NEURO.PY MODÜLÜ (Nöroloji & Hareket & Otizm) ---
-elif branch == "Neuro.py" or branch == "Pediatrics":
-    st.info("🧠 **Neurological & Behavioral Monitor Active**")
-    n1, n2, n3 = st.columns(3)
-    
-    # Mood & Facial Analysis (Taslağındaki Mood/Facial/Body Movement)
-    mood = today['Mood_Score']
-    if mood <= 4:
-        neuro_note = "🚨 Clinical Depression / Neuro-Fatigue"
-    elif mood >= 8:
-        neuro_note = "✅ Stable Cognitive Function"
-    else:
-        neuro_note = "🟡 Moderate Engagement"
-
-    n1.metric("Mood/Gait Score", f"{mood}/10", f"{mood-yesterday['Mood_Score']}")
-    n2.metric("Neuro-Symmetry", "92%", "Stable")
-    n3.metric("Pain Scale (VAS)", f"{today['Mood_Score']}") # Pain proxy
-
-    # Otizm & Genetik Sorgu Analizi
-    st.warning(f"📝 **Clinical Observation:** {neuro_note}")
-    st.write("---")
-    st.subheader("🤖 AI Motion & Gait Analysis")
-    st.caption("Analyzing body movement symmetry and facial micro-expressions...")
-    # Görselleştirme (Taslağındaki 5. Madde: Grafik tarzı)
-    st.area_chart(df.set_index('Date')[['Mood_Score']])
-
-    # NLG Özeti (Smart Processing)
+    # --- 6. GLOBAL AI SUMMARY (Tüm Branşlar İçin Raporlama) ---
     st.divider()
-    st.subheader("🧠 AI Clinical Summary (NLG)")
+    with st.expander("📝 View AI Clinical Summary", expanded=True):
+        report = (
+            f"**ANALYSIS FOR:** John Doe | **BRANCH:** {branch}\n\n"
+            f"Patient is currently showing **{status if 'status' in locals() else 'Stable'}** trends. "
+            f"Latest Systolic BP: {today['Systolic']} mmHg. "
+            f"Mood/Gait tracking suggests {'routine follow-up' if today['Mood_Score'] > 5 else 'urgent neurological review'}."
+        )
+        st.markdown(report)
+        if st.button("📤 Dispatch Secure Report"):
+            st.success(f"Encrypted report sent to {branch} department.")
     
-    # BIA Oedema/Cachexia Logic
-    weight_delta = today['Weight'] - yesterday['Weight']
-    # Simulated Logic
-    bia_oedema = True if weight_delta > 1.5 else False
-    bia_cachexia = True if weight_delta < -2.0 else False
+# --- 7. DATA PERSISTENCE & EXPORT (Opsiyonel) ---
+st.sidebar.divider()
+st.sidebar.subheader("💾 Data Management")
 
-    report = (
-        f"PATIENT REPORT: John Doe\n"
-        f"STATUS: {'ALERT - OEDEMA RISK' if bia_oedema else 'STABLE'}\n"
-        f"OBSERVATION: Systolic pressure trending at {today['Systolic']} mmHg. "
-        f"Mood score has declined to {today['Mood_Score']}/10, suggesting potential distress or neurological fatigue."
-    )
-    st.info(report)
-    
-    if st.button("📤 Dispatch Report to Doctor"):
-        st.success("Report transmitted via secure clinical channel.")
+# Veriyi Excel/CSV olarak indirme imkanı
+csv = df.to_csv(index=False).encode('utf-8')
+st.sidebar.download_button(
+    label="📥 Export Patient History",
+    data=csv,
+    file_name=f"Patient_Data_{datetime.now().strftime('%Y%m%d')}.csv",
+    mime='text/csv',
+)
+
+if st.sidebar.button("🔄 Reset Session Data"):
+    st.session_state.clear()
+    st.rerun()
 
 
 
