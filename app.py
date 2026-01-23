@@ -1,10 +1,10 @@
 import streamlit as st
 
-# Modülleri güvenli bir şekilde import ediyoruz
+# Güvenli import (therapy modülü henüz yoksa hata vermemesi için)
 try:
     from modules import metabolic, neuro, pediatric, derma, resp_sonic, therapy
-except ImportError:
-    st.error("Missing Module: Please ensure 'therapy.py' exists in the 'modules' folder.")
+except ImportError as e:
+    st.warning("Some modules are loading... Please ensure all files in /modules are updated.")
 
 st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide", page_icon="🏥")
 
@@ -23,17 +23,20 @@ if user_role == "Patient Portal":
         st.metric("OMAD Adherence", "95%", "+2%")
         
     elif choice == "💊 Therapy & Med-Tracker":
-        therapy.show_therapy()
+        # Burada therapy.py içindeki fonksiyonu çağırıyoruz
+        try:
+            therapy.show_therapy()
+        except:
+            st.error("Therapy module is being updated.")
 
     elif choice == "📸 Live Clinical Scan":
         st.title("🎥 Live Patient-Physician Connect")
         st.markdown("### Visual & Audio Clinical Session")
-        st.write("Please record a video showing the area of concern. Describe your symptoms clearly while recording.")
+        st.write("Record a video showing the area of concern. Describe symptoms while recording.")
         
-        # Branş bağımsız Full Body/Face tarama alanı
         scan_mode = st.selectbox("Scanning Area", ["Full Body Scan", "Facial/Edema Scan", "Respiratory/Chest Scan", "Skin/Mole Scan"])
         
-        # Sesli Video Kaydı (file_uploader mobilde kamerayı video modunda açar)
+        # MOBİLDE HEM SES HEM VİDEO KAYDEDEN KISIM
         clinical_video = st.file_uploader(f"Record {scan_mode} Video (Audio included)", type=["mp4", "mov", "avi"])
         
         if clinical_video:
@@ -43,7 +46,7 @@ if user_role == "Patient Portal":
                 st.info("Sending encrypted data to your physician...")
 
 else:
-    # UZMAN PANELİ (Tüm detaylar senin elinde)
+    # --- UZMAN (DOKTOR) PANELİ ---
     st.sidebar.divider()
     choice = st.sidebar.selectbox("Specialist Menu", 
                                   ["Metabolic-360", "Neuro-Guard", "Pediatric-Pro", "Derma-Scan", "Resp-Sonic"])
