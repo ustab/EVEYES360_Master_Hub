@@ -1,90 +1,60 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # --- CONFIGURATION ---
-st.set_page_config(page_title="EVEYES 360 RPM Demo", layout="wide")
+st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide")
 
-# --- SIMULATED EMERGENCY CONTACT ---
-DOCTOR_WHATSAPP = "905XXXXXXXXX" 
+# --- DATA ENGINE (Yesterday vs Today Logic) ---
+if 'db' not in st.session_state:
+    st.session_state.db = pd.DataFrame({
+        'Date': [datetime.now() - timedelta(days=1), datetime.now()],
+        'Weight': [71.5, 70.2],
+        'BIA': [490, 505],
+        'Systolic': [125, 145], # Example of a spike
+        'SpO2': [98, 96],
+        'Pain': [6, 3]
+    })
 
-# --- DATA STORAGE ---
-if 'history' not in st.session_state:
-    st.session_state.history = []
+# --- SIDEBAR ---
+st.sidebar.title("🏥 EVEYES 360")
+user_role = st.sidebar.radio("Portal Access", ["Patient Portal", "Specialist Hub"])
 
-# --- APP LAYOUT ---
-st.sidebar.title("🏥 EVEYES 360 Hub")
-mode = st.sidebar.radio("Navigation", ["Patient Terminal", "Specialist Dashboard"])
+if user_role == "Patient Portal":
+    menu = ["🏠 Dashboard (Compare & Analyze)", "📝 Daily Clinical Entry", "💊 Therapy Tracker"]
+    choice = st.sidebar.selectbox("Navigation", menu)
 
-if mode == "Patient Terminal":
-    st.title("📱 Patient Input & Emergency Portal")
-    
-    with st.form("daily_entry"):
-        st.subheader("Vital Signs Entry")
-        c1, c2, c3 = st.columns(3)
-        sys = c1.number_input("Systolic BP (mmHg)", 70, 250, 120)
-        spo2 = c2.number_input("SpO2 (%)", 50, 100, 98)
-        weight = c3.number_input("Weight (kg)", 30.0, 200.0, 75.0)
+    # --- THE IMPROVED OLD DASHBOARD ---
+    if choice == "🏠 Dashboard (Compare & Analyze)":
+        st.title("📊 Clinical Progress: Yesterday vs Today")
         
-        bia = st.slider("BIA Resistance (Ohm)", 300, 800, 500)
-        note = st.text_area("Symptoms / Notes", "Feeling okay today.")
-        
-        submit = st.form_submit_button("💾 Save & Analyze")
+        df = st.session_state.db
+        # Calculate Deltas
+        w_diff = df['Weight'].iloc[-1] - df['Weight'].iloc[-2]
+        b_diff = df['BIA'].iloc[-1] - df['BIA'].iloc[-2]
+        p_diff = df['Pain'].iloc[-1] - df['Pain'].iloc[-2]
+        s_diff = df['Systolic'].iloc[-1] - df['Systolic'].iloc[-2]
 
-    if submit:
-        # Save to history
-        entry = {"date": datetime.now(), "sys": sys, "spo2": spo2, "weight": weight, "bia": bia}
-        st.session_state.history.append(entry)
-        
-        # --- 🚨 AUTOMATIC EMERGENCY LOGIC ---
-        is_emergency = False
-        alert_msg = ""
-        
-        if sys > 180:
-            is_emergency = True
-            alert_msg = f"CRITICAL HYPERTENSION DETECTED ({sys} mmHg)!"
-        elif spo2 < 92:
-            is_emergency = True
-            alert_msg = f"CRITICAL HYPOXIA DETECTED (SpO2: {spo2}%)!"
-            
-        if is_emergency:
-            st.error(f"⚠️ {alert_msg}")
-            # Automatic WhatsApp Trigger for Emergencies
-            auto_report = f"🚨 *EMERGENCY ALERT*%0AUser: John Doe%0AStatus: {alert_msg}%0ABIA: {bia} Ohm"
-            st.markdown(f'''
-                <a href="https://wa.me/{DOCTOR_WHATSAPP}?text={auto_report}" target="_blank">
-                    <button style="background-color:#FF4B4B; color:white; border:none; padding:15px; border-radius:10px; width:100%; font-weight:bold;">
-                        AUTO-ALERT: Notify Doctor Immediately
-                    </button>
-                </a>''', unsafe_allow_html=True)
-        else:
-            st.success("✅ Vitals are within stable range.")
+        # --- KEY METRICS (Original Layout) ---
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Weight", f"{df['Weight'].iloc[-1]} kg", f"{w_diff:.1f} kg", delta_color="inverse")
+        c2.metric("BIA (Muscle/Fluid)", f"{df['BIA'].iloc[-1]} Ω", f"{b_diff:+d}")
+        c3.metric("Pain Level", f"{df['Pain'].iloc[-1]}/10", f"{p_diff:+d}", delta_color="inverse")
+        c4.metric("Systolic BP", f"{df['Systolic'].iloc[-1]} mmHg", f"{s_diff:+d}", delta_color="inverse")
 
-    # --- 📤 MANUAL REPORT OPTION ---
-    st.divider()
-    st.subheader("Manual Reporting")
-    if st.button("📄 Generate Full Clinical Report"):
-        full_report = f"🏥 *EVEYES 360 CLINICAL UPDATE*%0AWeight: {weight}kg%0ABP: {sys} mmHg%0ASpO2: {spo2}%%0ANote: {note}"
-        st.markdown(f'''
-            <a href="https://wa.me/{DOCTOR_WHATSAPP}?text={full_report}" target="_blank">
-                <button style="background-color:#25D366; color:white; border:none; padding:12px; border-radius:8px; width:100%;">
-                    Send Full Report to Physician (WhatsApp)
-                </button>
-            </a>''', unsafe_allow_html=True)
-
-else:
-    # --- SPECIALIST DASHBOARD ---
-    st.title("👨‍⚕️ Specialist Decision Support")
-    if st.session_state.history:
-        df = pd.DataFrame(st.session_state.history)
+        # --- AI CLINICAL INSIGHT ---
+        st.info(f"""
+        🧠 **EVEYES AI Analysis:** Your weight decreased by **{abs(w_diff):.1f} kg**, while BIA increased by **{b_diff} Ω**. 
+        This suggests healthy fluid loss while maintaining muscle mass. However, your Blood Pressure rose by **{s_diff} units**; please monitor closely.
+        """)
         
-        # Triage Display
-        latest = df.iloc[-1]
-        status = "🔴 CRITICAL" if (latest['sys'] > 180 or latest['spo2'] < 92) else "🟢 STABLE"
-        
-        st.metric("Patient Status", status)
-        st.subheader("Vital Trends")
-        st.line_chart(df.set_index('date')[['sys', 'spo2']])
-    else:
-        st.info("No patient data available yet.")
+        st.subheader("📈 Physiological Trends")
+        st.line_chart(df.set_index('Date')[['Weight', 'BIA', 'Systolic']])
 
+    # --- DAILY ENTRY WITH AUTO-ALERTS ---
+    elif choice == "📝 Daily Clinical Entry":
+        st.title("📝 Data Intake & Emergency Check")
+        
+        with st.form("clinical_form"):
+            col_a, col_b, col_c = st.columns(3)
+            weight = col_a.number_input("Current Weight (kg)", 30.0, 200
