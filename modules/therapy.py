@@ -12,6 +12,7 @@ def show_therapy():
         diet = st.checkbox("OMAD Protocol Followed?")
 
     if st.button("Generate Summary"):
-        st.write(f"Current BMI: {weight / (1.75**2):.1f}")
-        st.success("Daily log recorded locally.")
+        bmi = weight / (1.75**2)
+        st.write(f"**Current BMI:** {bmi:.1f}")
+        st.success("Daily log recorded. You can now send this to your doctor.")
 
