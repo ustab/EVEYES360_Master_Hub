@@ -126,6 +126,26 @@ else:
         st.metric("Vücut Yağ Oranı (BIA)", f"{today['BIA_Fat']}%")
         st.bar_chart(df['BIA_Fat'])
 
+    elif "Neuro" in branch:
+        st.subheader("🧠 Nörolojik Hareket ve Yüz Analizi")
+        col_n1, col_n2 = st.columns(2)
+        with col_n1:
+            st.write("#### Canlı Gait (Yürüyüş) ve Hareket Analizi")
+            # Vücut analizi için yapay zeka iskelet yapısını simüle eden bir grafik
+            body_points = pd.DataFrame(
+                np.random.randn(10, 2),
+                columns=['Eklem Açısı (X)', 'Hareket Genliği (Y)']
+            )
+            st.scatter_chart(body_points)
+            st.caption("İskelet Sistemi ve Hareket Simetrisi Verisi")
+            
+        with col_n2:
+            st.write("#### Mikro-Mimik ve Yüz Analizi")
+            st.write("- **Göz Kırpma Hızı:** 12 bpm")
+            st.write("- **Yüz Kas Tonusu:** Normal")
+            st.write("- **Nistagmus Kontrolü:** Negatif")
+            st.progress(0.95, text="Fasiyal Simetrisi Skor")
+
     # Ortak Raporlama Bölümü
     st.divider()
     with st.expander("📝 Clinical Intelligence Report", expanded=True):
@@ -141,3 +161,4 @@ if st.sidebar.button("🔄 Reset System"):
     st.session_state.clear()
 
     st.rerun()
+
