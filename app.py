@@ -35,64 +35,9 @@ df = st.session_state.patient_db
 today = df.iloc[-1]
 yesterday = df.iloc[-2]
 
-# --- 3. SIDEBAR: AKILLI VE BAĞLANTILI YAPI ---
-st.sidebar.title("🏥 EVEYES 360 Hub")
-
-# 1. HEDEF GRUP (Ana Belirleyici)
-patient_group = st.sidebar.selectbox(
-    "🎯 Target Group", 
-    ["Chronic Care", "Pediatric", "Geriatric", "Post-Op"]
-)
-
-# 2. SİSTEM GİRİŞİ
-user_role = st.sidebar.selectbox(
-    "🔐 System Access", 
-    ["Patient Portal", "Specialist Dashboard"]
-)
-
-# 3. AKILLI BRANŞ FİLTRELEME (Uyumsuzluğu Çözen Kısım)
-# Hedef gruba göre doktorun göreceği modülleri kısıtlıyoruz
-if user_role == "Specialist Dashboard":
-    if patient_group == "Pediatric":
-        module_options = ["Pediatric Growth", "Neuro-Developmental", "Genetic Screening"]
-    elif patient_group == "Chronic Care":
-        module_options = ["Metabolic.py", "Cardio-Renal", "General Medicine"]
-    elif patient_group == "Geriatric":
-        module_options = ["Neuro.py (Dementia)", "Mobility & Gait", "Polypharmacy"]
-    else:
-        module_options = ["General Medicine", "Custom Analysis"]
-        
-    branch = st.sidebar.selectbox("🧠 Clinical Module", module_options)
-else:
-    branch = "General Medicine" # NameError önleyici
-
-# 1. HEDEF GRUP
-patient_group = st.sidebar.selectbox(
-    "🎯 Target Group", 
-    ["Chronic Care (Active)", "Geriatric", "Post-Op", "Pregnancy", "Pediatric"]
-)
-
-# 2. SİSTEM GİRİŞİ
-user_role = st.sidebar.selectbox(
-    "🔐 System Access", 
-    ["Patient Portal", "Specialist Dashboard"]
-)
-
-# 3. KOŞULLU BRANŞ SEÇİMİ
-if user_role == "Specialist Dashboard":
-    branch = st.sidebar.selectbox(
-        "🧠 Clinical Module", 
-        ["General Medicine", "Metabolic.py", "Neuro.py", "Pediatrics"]
-    )
 
 
-# --- 4. ROL KONTROLÜ (Hata Buradaydı, Şimdi Düzelecek) ---
-if user_role == "Patient Portal":
-    # Buradan aşağısı senin mevcut kodunla devam edebilir...
-    st.sidebar.success("Welcome to Patient Terminal")
-# ==========================================
-# 4. PATIENT PORTAL (Parametreler & Mood Analiz)
-# ==========================================
+
 if user_role == "Patient Portal":
     tabs = st.tabs(["🏠 Clinical Dashboard", "📝 Vital Entry", "📷 AI Vision Scan"])
 
@@ -173,6 +118,7 @@ else:
     
     if st.button("📤 Dispatch Report to Doctor"):
         st.success("Report transmitted via secure clinical channel.")
+
 
 
 
