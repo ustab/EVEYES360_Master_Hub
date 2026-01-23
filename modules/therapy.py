@@ -1,20 +1,17 @@
 import streamlit as st
-import pandas as pd
 
 def show_therapy():
-    st.subheader("💊 Daily Therapy Log")
+    st.subheader("💊 Therapy & Medication Intelligence")
     
     col1, col2 = st.columns(2)
     with col1:
-        weight = st.number_input("Today's Weight (kg)", value=75.0)
-        waist = st.number_input("Waist Circumference (cm)", value=95.0)
-    
+        weight = st.number_input("Today's Weight (kg)", value=70.0)
+        waist = st.number_input("Waist Circumference (cm)", value=90.0)
     with col2:
-        meds = st.multiselect("Meds Taken", ["Metformin", "Berberine", "Magnesium"])
-        diet = st.checkbox("OMAD Protocol Completed?")
+        meds = st.multiselect("Meds Taken Today", ["Metformin XR", "Berberine", "Magnesium"])
+        diet = st.checkbox("OMAD Protocol Followed?")
 
-    if st.button("📤 Send Comprehensive Report to Doctor"):
-        report = f"PATIENT REPORT\nWeight: {weight}\nWaist: {waist}\nMeds: {meds}\nDiet: {diet}"
-        # WhatsApp Entegrasyonu
-        msg = report.replace("\n", "%0A")
-        st.markdown(f'[Click to Send via WhatsApp](https://wa.me/905XXXXXXXXX?text={msg})')
+    if st.button("Generate Summary"):
+        st.write(f"Current BMI: {weight / (1.75**2):.1f}")
+        st.success("Daily log recorded locally.")
+
