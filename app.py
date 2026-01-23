@@ -40,7 +40,7 @@ st.sidebar.title("🏥 EVEYES 360 Hub")
 patient_group = st.sidebar.selectbox("🎯 Target Group", 
     ["Chronic Care (Active)", "Geriatric", "Post-Op", "Pregnancy", "Pediatric (Growth Tracking)"])
 
-user_role = st.sidebar.selectbox("System Access", ["patient Portal"])
+user_role = st.sidebar.selectbox("System Access", ["Patient Portal", "Specialist Dashboard"])
 
 # Modüler Branş Seçimi (Specialist için)
 branch = st.sidebar.selectbox("Clinical Module", ["General Medicine", "Metabolic.py", "Neuro.py", "Pediatrics"])
@@ -128,7 +128,3 @@ else:
     
     if st.button("📤 Dispatch Report to Doctor"):
         st.success("Report transmitted via secure clinical channel.")
-
-
-
-
