@@ -3,21 +3,20 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
-#  1. CONFIGURATION & CLINICAL THEMING (Görselleştirme & Mobil Arayüz) ---
+# 1. KONFİGÜRASYON & KLİNİK TEMA
 st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide", page_icon="🏥")
 
-# Mobil Optimizasyon ve Klinik Tema için CSS
 st.markdown("""
     <style>
     .main { background-color: #f8f9fa; }
     .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    [data-testid="stSidebar"] { background-color: #1a2a3a; color: white; }
+    [data-testid="stSidebar"] { background-color: #1a2a3a; }
+    [data-testid="stSidebar"] .stSelectbox label, [data-testid="stSidebar"] p { color: white !important; font-weight: bold; }
     .stButton>button { width: 100%; border-radius: 8px; font-weight: bold; }
-    @media (max-width: 640px) { .main { padding: 10px; } }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. DATA ENGINE & ENHANCED PARAMETERS (Boy, BMI, BIA Analizi) ---
+# 2. VERİ MOTORU
 if 'patient_db' not in st.session_state:
     st.session_state.patient_db = pd.DataFrame({
         'Date': [(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(4, -1, -1)],
@@ -28,41 +27,29 @@ if 'patient_db' not in st.session_state:
         'Pulse': [72, 74, 75, 88, 92],
         'SpO2': [98, 97, 98, 96, 94],
         'BIA_Fat': [22.0, 21.8, 22.1, 23.5, 24.0],
-        'Mood_Score': [8, 7, 7, 4, 3] # Facial/Body Movement Analysis Proxy
+        'Mood_Score': [8, 7, 7, 4, 3]
     })
 
 df = st.session_state.patient_db
 today = df.iloc[-1]
 yesterday = df.iloc[-2]
 
-# 3. SIDEBAR: MERKEZİ KONTROL (Hataları Çözen Bölüm)
-
+# 3. SIDEBAR: MERKEZİ KONTROL
 st.sidebar.title("🏥 EVEYES 360 Hub")
 
-# CSS: Siyah yazıları BEYAZ yapar (image_be5791 hatası çözümü)
-st.markdown("""<style>
-    [data-testid="stSidebar"] .stSelectbox label { color: white !important; font-weight: bold; }
-    [data-testid="stSidebar"] p { color: white !important; }
-</style>""", unsafe_allow_html=True)
-
-# Değişkenleri en başta tanımlayarak NameError'ı engelliyoruz
-branch = "General Medicine" 
-
-# 1. HEDEF GRUP
 patient_group = st.sidebar.selectbox(
     "🎯 Target Group", 
     ["Chronic Care", "Pediatric", "Geriatric", "Pregnancy", "Post-Op"],
     key="fixed_tg"
 )
 
-# 2. SİSTEM GİRİŞİ (Satır 41'deki hatayı çözen satır)
 user_role = st.sidebar.selectbox(
     "🔐 System Access", 
     ["Patient Portal", "Specialist Dashboard"],
     key="fixed_role"
 )
 
-# 3. BRANŞ SEÇİMİ (Satır 111'deki hatayı çözen satır)
+branch = "General Medicine" # Varsayılan branş
 if user_role == "Specialist Dashboard":
     if patient_group == "Pediatric":
         options = ["Pediatrics", "Growth & Development", "Genetic Screening"]
@@ -72,80 +59,61 @@ if user_role == "Specialist Dashboard":
         options = ["Neuro.py", "Mobility & Gait", "Dementia Care"]
     else:
         options = ["General Medicine", "Custom Module"]
-    
     branch = st.sidebar.selectbox("🧠 Clinical Module", options, key="fixed_branch")
 
-st.sidebar.divider()
-
-
+# --- ANA PANEL ---
 if user_role == "Patient Portal":
     tabs = st.tabs(["🏠 Clinical Dashboard", "📝 Vital Entry", "📷 AI Vision Scan"])
 
-    with tabs[0]: # Görselleştirme & Parametreler
+    with tabs[0]:
         st.subheader("📊 Comparative Analytics")
-        # BMI Calculation
         bmi = today['Weight'] / ((today['Height']/100)**2)
+        prev_bmi = yesterday['Weight'] / ((yesterday['Height']/100)**2)
         
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric("BMI Index", f"{bmi:.1f}", f"{bmi - (yesterday['Weight'] / ((yesterday['Height']/100)**2)):.1f}", delta_color="inverse")
+        c1.metric("BMI Index", f"{bmi:.1f}", f"{bmi - prev_bmi:.1f}", delta_color="inverse")
         c2.metric("BP (Sys/Dia)", f"{today['Systolic']}/{today['Diastolic']}", f"{today['Systolic']-yesterday['Systolic']}/ {today['Diastolic']-yesterday['Diastolic']}", delta_color="inverse")
         c3.metric("Pulse (BPM)", f"{today['Pulse']}", f"{today['Pulse']-yesterday['Pulse']}", delta_color="inverse")
         c4.metric("Mood/Gait Score", f"{today['Mood_Score']}/10", f"{today['Mood_Score']-yesterday['Mood_Score']}", delta_color="normal")
 
-        # Growth Curve / Trend
         st.subheader("📈 Physiological Trends")
         st.line_chart(df.set_index('Date')[['Weight', 'Systolic', 'Pulse']])
 
-    with tabs[1]: # Akıllı İşleme & Sorgu
+    with tabs[1]:
         st.subheader("📝 Advanced Data Entry")
         with st.form("advanced_vitals"):
             col1, col2 = st.columns(2)
-            w = col1.number_input("Weight (kg)", 30.0, 250.0, 75.0)
-            h = col2.number_input("Height (cm)", 50, 250, 175)
+            w_input = col1.number_input("Weight (kg)", 30.0, 250.0, float(today['Weight']))
+            h_input = col2.number_input("Height (cm)", 50, 250, int(today['Height']))
             
-            # Pain Scale (Visual Analog Scale representation)
-            pain_type = st.select_slider("Pain Intensity (Visual/Numeric Scale)", 
-                                       options=["😊 0", "😐 2", "😟 4", "😫 6", "😭 8", "😱 10"])
+            pain_type = st.select_slider("Pain Intensity", options=["😊 0", "😐 2", "😟 4", "😫 6", "😭 8", "😱 10"])
             
-            # Genetic/Neuro Screening
             st.write("---")
             st.subheader("Genetic & Neuro Screening")
             q1 = st.checkbox("History of Genetic Disorders in Family?")
-            q2 = st.checkbox("Neurological Symptoms (Tremor/Asymmetry)?")
-            autism_check = st.radio("Social/Communication Interaction Status (Autism Screening):", ["Typical", "Atypical Observations"])
+            q2 = st.checkbox("Neurological Symptoms?")
+            autism_check = st.radio("Social/Communication Interaction Status:", ["Typical", "Atypical Observations"])
             
             submit = st.form_submit_button("💾 Process & Validate")
 
             if submit: 
-                # 1. Yeni veriyi mevcut satırdan kopyala (şablon olarak)
                 new_entry = today.copy()
-                
-                # 2. Formdaki yeni değerleri üzerine yaz
                 new_entry['Date'] = datetime.now().strftime('%Y-%m-%d')
-                new_entry['Weight'] = w_in
-                new_entry['Height'] = h_in
+                new_entry['Weight'] = w_input
+                new_entry['Height'] = h_input
                 
-                # 3. Ana veritabanına (session_state) bu yeni satırı ekle
-                st.session_state.patient_db = pd.concat([
-                    st.session_state.patient_db, 
-                    pd.DataFrame([new_entry])
-                ], ignore_index=True)
-                
-                st.success("✅ Veri Kaydedildi! Grafikler Güncelleniyor...")
-                st.rerun() # Bu komut sayfayı yeniler ve yeni veriyi grafiğe işler
+                st.session_state.patient_db = pd.concat([st.session_state.patient_db, pd.DataFrame([new_entry])], ignore_index=True)
+                st.success("✅ Veri Kaydedildi!")
+                st.rerun()
 
-    with tabs[2]: # AI Vision Scan (Mood & Facial Analysis)
+    with tabs[2]:
         st.subheader("📷 Patient Mood & Body Movement Analysis")
-        st.info("AI is analyzing facial micro-expressions and body symmetry for Gait/Mood assessment.")
         st.camera_input("Facial & Posture Scan")
         st.file_uploader("Upload Gait/Movement Video", type=["mp4", "mov"])
 
- 
-# 4 & 5. BRANŞ ÖZEL ANALİZ MOTORLARI (SADECE SPECIALIST İÇİN)
-else: # Yani user_role == "Specialist Dashboard" ise
+else: # Specialist Dashboard
     st.title(f"👨‍⚕️ {branch} Decision Support")
     
-    # --- A. METABOLIC.PY MODÜLÜ ---
     if branch == "Metabolic.py":
         st.info("🧬 **Metabolic Analysis Mode Active**")
         m1, m2, m3 = st.columns(3)
@@ -153,7 +121,7 @@ else: # Yani user_role == "Specialist Dashboard" ise
         fat_trend = today['BIA_Fat'] - yesterday['BIA_Fat']
         
         status = "✅ Stable"
-        if w_trend > 1.5 and fat_trend <= 0: status = "🚨 OEDEMA RISK"
+        if w_trend > 1.5: status = "🚨 OEDEMA RISK"
         elif w_trend < -2.0: status = "⚠️ CACHEXIA RISK"
         
         m1.metric("Metabolic Status", status, f"{w_trend:+.1f}kg")
@@ -161,80 +129,20 @@ else: # Yani user_role == "Specialist Dashboard" ise
         m3.metric("BIA Fat %", f"{today['BIA_Fat']}%", f"{fat_trend:+.1f}%")
         st.line_chart(df.set_index('Date')[['Weight', 'BIA_Fat']])
 
-    # --- B. NEURO.PY & PEDIATRICS MODÜLÜ ---
     elif branch in ["Neuro.py", "Pediatrics", "Growth & Development"]:
         st.info("🧠 **Neurological & Behavioral Monitor Active**")
         n1, n2, n3 = st.columns(3)
         mood = today['Mood_Score']
-        
         n1.metric("Mood Score", f"{mood}/10", f"{mood-yesterday['Mood_Score']}")
         n2.metric("Neuro-Symmetry", "94%", "Optimal")
         n3.metric("Communication", "Typical" if mood > 5 else "Atypical")
-        
-       
-       
         st.area_chart(df.set_index('Date')[['Mood_Score']])
-    # --- 6. AKILLI RAPOR & DR. ALARM SİSTEMİ ---
-        st.divider()
-        st.subheader("📝 Clinical Intelligence Report")
 
-# Rapor Mantığı ve Otomatik Alarm Kontrolü
-        weight_delta = today['Weight'] - yesterday['Weight']
-        is_emergency = False
-        emergency_msg = ""
-
-# Otomatik Acil Durum Kontrolleri (Tıbbi Algoritma)
-if today['Systolic'] >= 160:
-    is_emergency = True
-    emergency_msg = "🚨 KRİTİK TANSİYON YÜKSEKLİĞİ!"
-elif weight_delta > 2.0:
-    is_emergency = True
-    emergency_msg = "🚨 ANİ KİLO ARTIŞI (ÖDEM RİSKİ)!"
-elif today['Mood_Score'] <= 3:
-    is_emergency = True
-    emergency_msg = "🚨 NÖROLOJİK / MOOD KRİZİ!"
-
-# 1. EKRANDA GÖRÜNEN RAPOR ALANI
-with st.expander("📄 Rapor Detayını Görüntüle", expanded=True):
-    if is_emergency:
-        st.error(f"**ACİL DURUM UYARISI:** {emergency_msg}")
-    
-    report_text = f"""
-    **HASTA:** John Doe  
-    **TARİH:** {today['Date']}  
-    **BRANŞ:** {branch}  
-    
-    **KLİNİK ANALİZ:** - Mevcut Kilo: {today['Weight']} kg ({weight_delta:+.1f} kg değişim)
-    - Tansiyon: {today['Systolic']}/{today['Diastolic']} mmHg
-    - Mood/Gait Skoru: {today['Mood_Score']}/10
-    
-    **AI YORUMU:** {branch} verileri incelendiğinde, hastanın genel durumu 
-    {'KRİTİK' if is_emergency else 'STABİL'} olarak değerlendirilmiştir.
-    """
-    st.markdown(report_text)
-
-# 2. DOKTORA GÖNDERME BUTONU VE OTOMATİK AKIŞ
-col_send, col_status = st.columns([1, 2])
-
-with col_send:
-    if st.button("📤 DOKTORUMA GÖNDER"):
-        # Burada gerçek bir mail/SMS API'sı çalışabilir
-        st.success("✅ Rapor başarıyla Dr. Panelimize iletildi.")
-
-with col_status:
-    if is_emergency:
-        st.warning("⚠️ Acil durum tespit edildiği için sistem otomatik bildirim oluşturdu.")
-        # Buraya otomatik SMS/Bildirim gönderme kodu gelebilir
-# ---------------------------------------------------------
-    # 6. BÖLÜM: AKILLI RAPOR & DR. ALARM SİSTEMİ (BURAYI YAPIŞTIR)
-    # ---------------------------------------------------------
+    # AKILLI RAPOR & ALARM SİSTEMİ (Uzman Paneli İçinde)
     st.divider()
     st.subheader("📝 Clinical Intelligence Report")
-
-    # 1. Veriyi Hesapla (Hata almamak için önce bu satır gelmeli)
-    weight_delta = float(today['Weight'] - yesterday['Weight'])
     
-    # 2. Acil Durum Kontrol Algoritması
+    weight_delta = float(today['Weight'] - yesterday['Weight'])
     is_emergency = False
     emergency_msg = ""
 
@@ -248,44 +156,24 @@ with col_status:
         is_emergency = True
         emergency_msg = "🚨 NÖROLOJİK / MOOD KRİZİ!"
 
-    # 3. Raporun Ekranda Görünmesi
     with st.expander("📄 Rapor Detayını Görüntüle", expanded=True):
         if is_emergency:
             st.error(f"**ACİL DURUM UYARISI:** {emergency_msg}")
-        
-        st.markdown(f"""
-        **HASTA:** John Doe | **TARİH:** {today['Date']} | **BRANŞ:** {branch}
-        
-        **KLİNİK ANALİZ:**
-        - **Kilo Değişimi:** {weight_delta:+.1f} kg
-        - **Tansiyon:** {today['Systolic']}/{today['Diastolic']} mmHg
-        - **Genel Durum:** {'🔴 KRİTİK' if is_emergency else '🟢 STABİL'}
-        """)
+        st.markdown(f"**HASTA:** John Doe | **TARİH:** {today['Date']} | **BRANŞ:** {branch}")
+        st.write(f"- Kilo Değişimi: {weight_delta:+.1f} kg")
+        st.write(f"- Tansiyon: {today['Systolic']}/{today['Diastolic']} mmHg")
+        st.write(f"- Durum: {'🔴 KRİTİK' if is_emergency else '🟢 STABİL'}")
 
-    # 4. Doktora Gönder Butonları
     c_send, c_status = st.columns([1, 2])
-    
-    with c_send:
-        if st.button("📤 DOKTORUMA GÖNDER"):
-            st.success("✅ Rapor başarıyla Dr. Panelimize iletildi.")
+    if c_send.button("📤 DOKTORUMA GÖNDER"):
+        st.success("✅ Rapor iletildi.")
+    if is_emergency:
+        c_status.warning("⚠️ Sistem otomatik kritik bildirim oluşturdu.")
 
-    with c_status:
-        if is_emergency:
-            st.warning("⚠️ Kritik eşik aşıldığı için sistem otomatik bildirim oluşturdu.")
-    
-# 7. DATA PERSISTENCE & EXPORT (Opsiyonel) ---
+# 7. DATA MANAGEMENT
 st.sidebar.divider()
-st.sidebar.subheader("💾 Data Management")
-
-# Veriyi Excel/CSV olarak indirme imkanı
 csv = df.to_csv(index=False).encode('utf-8')
-st.sidebar.download_button(
-    label="📥 Export Patient History",
-    data=csv,
-    file_name=f"Patient_Data_{datetime.now().strftime('%Y%m%d')}.csv",
-    mime='text/csv',
-)
-
+st.sidebar.download_button("📥 Export Patient History", data=csv, file_name="Patient_Data.csv", mime='text/csv')
 if st.sidebar.button("🔄 Reset Session Data"):
     st.session_state.clear()
     st.rerun()
