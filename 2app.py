@@ -34,8 +34,8 @@ yesterday = df.iloc[-2]
 st.sidebar.title("🏥 EVEYES 360 Hub")
 user_role = st.sidebar.selectbox("🔐 System Access", ["Patient Portal", "Specialist Dashboard"])
 branch = st.sidebar.selectbox("🧠 Clinical Module", [
-    "General Medicine", "Neuro (neuro.py)", "Metabolic (metabolic.py)", 
-    "Sonic Bio-Analysis (resp_sonic.py)", "Music Psychotherapy (therapy.py)"
+    "General Medicine", "Neurological", "Metabolic", 
+    "Resp_sonic.py", "Music Psychotherapy"
 ])
 
 # GÜNCELLENMİŞ CANLI ANALİZ MOTORU (Hata giderilmiş hali)
@@ -86,3 +86,4 @@ else:
 if st.sidebar.button("🔄 Reset System"):
     st.session_state.clear()
     st.rerun()
+
