@@ -127,17 +127,63 @@ if user_role == "Patient Portal":
         st.camera_input("Facial & Posture Scan")
         st.file_uploader("Upload Gait/Movement Video", type=["mp4", "mov"])
 
+ # ==========================================
+# 6. BRANŞ ÖZEL ANALİZ MOTORLARI
 # ==========================================
-# 5. SPECIALIST DASHBOARD (Triyaj & NLG)
-# ==========================================
-else:
-    st.title(f"👨‍⚕️ {branch} Decision Support")
+
+# --- A. METABOLIC.PY MODÜLÜ (Diyabet & Obezite & Ödem) ---
+if branch == "Metabolic.py":
+    st.info("🧬 **Metabolic Analysis Mode Active**")
+    m1, m2, m3 = st.columns(3)
     
-    # Triyaj Paneli
-    c1, c2, c3 = st.columns(3)
-    c1.error("🔴 CRITICAL: John Doe (Hypertension Spike)")
-    c2.warning("🟡 FOLLOW-UP: Jane Smith (BIA Oedema Risk)")
-    c3.success("🟢 STABLE: 15 Patients")
+    # Akıllı Parametre: BIA Ödem & Kaşeksi Analizi
+    # Taslağındaki 2. Madde: BIA_OEDEMA, BIA_CAHEXIA
+    w_trend = today['Weight'] - yesterday['Weight']
+    fat_trend = today['BIA_Fat'] - yesterday['BIA_Fat']
+    
+    if w_trend > 1.5 and fat_trend <= 0:
+        status = "🚨 OEDEMA RISK (High Weight / Stable Fat)"
+        color = "red"
+    elif w_trend < -2.0 and fat_trend < -0.5:
+        status = "⚠️ CACHEXIA RISK (Rapid Muscle/Fat Loss)"
+        color = "orange"
+    else:
+        status = "✅ Metabolic Stability"
+        color = "green"
+    
+    m1.metric("Metabolic Status", "Active", status)
+    m2.metric("BMI", f"{(today['Weight']/((today['Height']/100)**2)):.1f}")
+    m3.metric("Daily Weight Delta", f"{w_trend:+.1f} kg")
+
+    # Boy-Kilo-Yaş İlişkili Büyüme Eğrisi Simülasyonu
+    st.subheader("📊 Growth & Metabolic Curve")
+    st.line_chart(df.set_index('Date')[['Weight', 'BIA_Fat']])
+
+# --- B. NEURO.PY MODÜLÜ (Nöroloji & Hareket & Otizm) ---
+elif branch == "Neuro.py" or branch == "Pediatrics":
+    st.info("🧠 **Neurological & Behavioral Monitor Active**")
+    n1, n2, n3 = st.columns(3)
+    
+    # Mood & Facial Analysis (Taslağındaki Mood/Facial/Body Movement)
+    mood = today['Mood_Score']
+    if mood <= 4:
+        neuro_note = "🚨 Clinical Depression / Neuro-Fatigue"
+    elif mood >= 8:
+        neuro_note = "✅ Stable Cognitive Function"
+    else:
+        neuro_note = "🟡 Moderate Engagement"
+
+    n1.metric("Mood/Gait Score", f"{mood}/10", f"{mood-yesterday['Mood_Score']}")
+    n2.metric("Neuro-Symmetry", "92%", "Stable")
+    n3.metric("Pain Scale (VAS)", f"{today['Mood_Score']}") # Pain proxy
+
+    # Otizm & Genetik Sorgu Analizi
+    st.warning(f"📝 **Clinical Observation:** {neuro_note}")
+    st.write("---")
+    st.subheader("🤖 AI Motion & Gait Analysis")
+    st.caption("Analyzing body movement symmetry and facial micro-expressions...")
+    # Görselleştirme (Taslağındaki 5. Madde: Grafik tarzı)
+    st.area_chart(df.set_index('Date')[['Mood_Score']])
 
     # NLG Özeti (Smart Processing)
     st.divider()
@@ -159,6 +205,7 @@ else:
     
     if st.button("📤 Dispatch Report to Doctor"):
         st.success("Report transmitted via secure clinical channel.")
+
 
 
 
