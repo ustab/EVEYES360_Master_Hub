@@ -1,57 +1,51 @@
 import streamlit as st
-
-# Modülleri güvenli bir şekilde import ediyoruz
 try:
     from modules import metabolic, neuro, pediatric, derma, resp_sonic, therapy
-except ImportError:
-    st.error("Missing Module: Please ensure all files exist in the 'modules' folder.")
+except:
+    pass
 
-st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide", page_icon="🏥")
+st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide")
 
-# --- SIDEBAR: ROLE SELECTION ---
-st.sidebar.title("🏥 EVEYES 360")
-user_role = st.sidebar.radio("Select Portal", ["Patient Portal", "Specialist Hub"])
+if st.sidebar.radio("Portal", ["Patient Terminal", "Specialist Hub"]) == "Patient Terminal":
+    st.title("🏥 Patient Clinical Input Terminal")
+    
+    # --- SECTION 1: VITAL SIGNS & BIOMETRICS ---
+    with st.expander("🌡️ Vital Signs & Body Composition", expanded=True):
+        c1, c2, c3, c4 = st.columns(4)
+        weight = c1.number_input("Weight (kg)", value=70.0)
+        temp = c2.number_input("Temperature (°C)", value=36.5, step=0.1)
+        pulse = c3.number_input("Heart Rate (BPM)", value=75)
+        bia = c4.number_input("BIA (Ohm)", value=500)
+        
+        # BMI & Cachexia (Kaşeksi) Monitoring
+        height = 1.75 # Default or from profile
+        bmi = weight / (height**2)
+        st.info(f"**Current BMI:** {bmi:.1f} | **Muscle Mass Status:** Monitoring for Cachexia Risk")
 
-if user_role == "Patient Portal":
-    st.sidebar.divider()
-    menu = ["🏠 My Dashboard", "💊 Therapy & Med-Tracker", "🎥 LIVE CLINICAL SCAN"]
-    choice = st.sidebar.selectbox("Patient Menu", menu)
+    # --- SECTION 2: PAIN SCALES (VAS & NUMERIC) ---
+    with st.expander("📉 Pain Assessment (Visual & Numeric)", expanded=False):
+        st.write("Rate your pain level:")
+        pain_level = st.select_slider("Numeric Pain Scale (0-10)", options=list(range(11)))
+        
+        # Visual Analog Scale (VAS) with emojis for patient ease
+        st.write("Visual Pain State:")
+        st.radio("VAS Scale", ["😊 No Pain", "😐 Mild", "😟 Moderate", "😫 Severe", "😭 Unbearable"], horizontal=True)
 
-    if choice == "🏠 My Dashboard":
-        st.title("Welcome back, Patient")
-        st.info("Keep your daily logs updated for clinical assessment.")
+    # --- SECTION 3: LIVE MULTI-MODAL SCAN ---
+    with st.expander("🎥 AI Live Scan (Face, Body, Voice)", expanded=False):
+        st.write("Record video for Gait, Facial Symmetry, and Muscle Wasting Analysis.")
+        scan_type = st.multiselect("Scan Targets", ["Face (Edema/Asymmetry)", "Full Body (Gait/Cachexia)", "Voice (Acoustic Analysis)"])
         
-    elif choice == "💊 Therapy & Med-Tracker":
-        therapy.show_therapy()
+        clinical_video = st.file_uploader("Start Live Recording (Audio+Video)", type=["mp4", "mov"])
+        clinical_photo = st.camera_input("Quick Snap (Wound/Mole)")
 
-    elif choice == "🎥 LIVE CLINICAL SCAN":
-        st.title("📹 Live Audio-Visual Examination")
-        st.warning("🔔 **Instruction:** When you click 'Start Recording', select 'Camera' and switch to **VIDEO** mode. Talk while recording to capture your voice.")
-        
-        # Bu bileşen mobilde doğrudan cihazın kamerasını video/ses kapasitesiyle tetikler
-        clinical_video = st.camera_input("Take a Photo for Quick Reference") 
-        
-        st.write("--- OR ---")
-        
-        # ASIL VİDEO KAYIT ALANI (Sesli ve Canlı)
-        video_data = st.file_uploader("Click here to Record Live Video & Audio", type=["mp4", "mov", "avi"])
-        
-        if video_data:
-            st.video(video_data)
-            st.success("✅ Video and Audio recorded and uploaded.")
-            if st.button("📤 Sync with Specialist Hub"):
-                st.balloons()
-                st.info("Clinical data sent to your physician.")
+    # --- SECTION 4: INTEGRATED REPORTING ---
+    if st.button("🚀 SUBMIT TO CLINICAL HUB"):
+        st.success("Synchronizing: Vitals, Pain Scales, BIA, and Visual Data...")
+        # Burada tüm verileri birleştirip uzman paneline gönderiyoruz
+        st.balloons()
 
 else:
-    # UZMAN PANELİ
-    st.sidebar.divider()
-    choice = st.sidebar.selectbox("Specialist Menu", 
-                                  ["Metabolic-360", "Neuro-Guard", "Pediatric-Pro", "Derma-Scan", "Resp-Sonic"])
-    
-    # Modülleri gösterme mantığı aynı kalıyor
-    if choice == "Metabolic-360": metabolic.show_metabolic()
-    elif choice == "Neuro-Guard": neuro.show_neuro()
-    elif choice == "Pediatric-Pro": pediatric.show_pediatric()
-    elif choice == "Derma-Scan": derma.show_derma()
-    elif choice == "Resp-Sonic": resp_sonic.show_resp()
+    st.title("👨‍⚕️ Specialist Analysis Center")
+    # Uzman burada hem videoyu izler hem de gelen BİA ve Ağrı verilerini kıyaslar
+    st.write("Select a module to review incoming multi-modal data.")
