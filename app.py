@@ -31,36 +31,149 @@ p_diff = today['Pain'] - yesterday['Pain']
 
 
 # --- SIDEBAR NAVIGATION ---
+# --- 4. YAN MENÜ YAPILANDIRMASI ---
 st.sidebar.title("🏥 EVEYES 360 RPM")
 user_role = st.sidebar.selectbox("System Access", ["Patient Portal", "Specialist Dashboard"])
 
 # ==========================================
 # 1. PATIENT PORTAL (Data Intake & Validation)
 # ==========================================
+
+# Kullanıcı Rolü Seçimi
+user_role = st.sidebar.selectbox(
+    "Select System Access", 
+    ["Patient Portal", "Specialist Dashboard"]
+)
+
+
+# --- 5. ROL BAZLI YÖNLENDİRME (Ana Mantık) ---
 if user_role == "Patient Portal":
-    st.title("📱 Patient Clinical Input Terminal")
+    # Hastanın göreceği alt menüler
+    st.sidebar.subheader("Patient Menu")
+    patient_menu = [
+        "🏠 Dashboard (Comparison)", 
+        "📝 Daily Vital Entry", 
+        "📊 Analytics & Report"
+    ]
+    choice = st.sidebar.radio("Navigation", patient_menu)
+
+
+
+  # --- 6. HASTA DASHBOARD EKRANI ---
+if choice == "🏠 Dashboard (Comparison)":
+    st.title("📊 Clinical Progress: Yesterday vs Today")
     
-    # Target Group Selection for Contextual Input
-    patient_group = st.sidebar.selectbox("Patient Category", 
-        ["Chronic Care", "Geriatric", "Post-Operative", "High-Risk Pregnancy", "Rehabilitation"])
+    # Sayfayı 4 ana sütuna bölüyoruz
+    c1, c2, c3, c4 = st.columns(4)
+    
+    # 1. Kolon: Kilo (Delta: inverse çünkü kilo artışı genelde ödem/risk demektir)
+    c1.metric(
+        label="Current Weight", 
+        value=f"{today['Weight']} kg", 
+        delta=f"{w_diff:.1f} kg", 
+        delta_color="inverse"
+    )
+    # 2. Kolon: Tansiyon (Delta: inverse çünkü tansiyon artışı risk demektir)
+    c2.metric(
+        label="Systolic BP", 
+        value=f"{today['Systolic']} mmHg", 
+        delta=f"{s_diff:+d}", 
+        delta_color="inverse"
+    )
+    
+    # 3. Kolon: Kas Kütlesi (BIA)
+    c3.metric(
+        label="Muscle Mass (BIA)", 
+        value=f"{today['BIA_Muscle']} kg", 
+        delta=f"{b_diff:.1f} kg"
+    )
+    
+    # 4. Kolon: Oksijen Satürasyonu (SpO2)
+    spo2_diff = today['SpO2'] - yesterday['SpO2']
+    c4.metric(
+        label="SpO2 (%)", 
+        value=f"{today['SpO2']}%", 
+        delta=f"{spo2_diff}%"
+    )
 
-    tabs = st.tabs(["📝 Vitals & BIA", "📷 Visual Scan", "📊 My Trends"])
+    st.divider()
 
-    with tabs[0]:
+    # Görselleştirme: Trend Grafiği
+    st.subheader("📈 Physiological Trends (Last 5 Days)")
+    # Kullanıcıya grafikte neyi görmek istediğini seçtiriyoruz
+    chart_selection = st.multiselect(
+        "Select parameters to view on chart:",
+        ["Weight", "Systolic", "SpO2", "BIA_Muscle", "Pain"],
+        default=["Weight", "Systolic"]
+    )
+    st.line_chart(df.set_index('Date')[chart_selection])
+
+ 
+
+# --- 7. VERİ GİRİŞ EKRANI ---
+elif choice == "📝 Daily Vital Entry":
+    st.title("📝 Daily Clinical Entry")
+    
+    # Hedef Hasta Grubu (Senin taslağındaki 1. Madde)
+    st.sidebar.info("Category: Chronic Care") 
+
+    with st.form("vital_entry_form"):
         st.subheader("Physical & Biometric Data")
+        
         c1, c2, c3 = st.columns(3)
         
-        # Section A: Input Validation (Hard Limits Implementation)
-        weight = c1.number_input("Weight (kg)", min_value=30.0, max_value=250.0, value=75.0)
-        systolic = c2.number_input("Systolic BP (mmHg)", min_value=50, max_value=250, value=120)
-        spo2 = c3.number_input("SpO2 (%)", min_value=50, max_value=100, value=98)
-        
-        # Section B: BIA Entegration
+        # Giriş Doğrulama (Hard Limits): Tıbben imkansız değerleri sınırlıyoruz
+        new_w = c1.number_input("Weight (kg)", min_value=30.0, max_value=250.0, value=float(today['Weight']))
+        new_s = c2.number_input("Systolic BP (mmHg)", min_value=50, max_value=250, value=int(today['Systolic']))
+        new_sp = c3.number_input("SpO2 (%)", min_value=50, max_value=100, value=int(today['SpO2']))
         bia_muscle = st.slider("BIA Muscle Mass (kg)", 10.0, 60.0, 32.0)
-        
-        if systolic > 180 or spo2 < 90:
+        bia_oedema = st.slider("BIA oedema (kg)", 10.0, 60.0, 32.0)
+        if systolic > 180 or spo2 < 90 or BIA increae:
             st.error("⚠️ CRITICAL VALUES DETECTED: Please contact your doctor immediately or call emergency services.")
+        st.divider()
 
+
+
+       st.subheader("BIA & Subjective Data")
+        col_a, col_b = st.columns(2)
+        new_b = col_a.slider("Muscle Mass (BIA - kg)", 10.0, 60.0, float(today['BIA_Muscle']))
+        new_p = col_b.slider("Pain Level (0-10)", 0, 10, int(today['Pain']))
+
+        
+        st.subheader("BIA & Subjective Data")
+        col_a, col_b = st.columns(2)
+        new_b = col_a.slider("Muscle Mass (BIA - kg)", 10.0, 60.0, float(today['BIA_Muscle']))
+        new_p = col_b.slider("Pain Level (0-10)", 0, 10, int(today['Pain']))
+        new_oedema=col_c.slider("oedema Level (0-10)", 0, 10, int(today['oedema']))
+        submit_button = st.form_submit_button("💾 Save & Check for Risks")
+
+    # --- 8. ANOMALİ TESPİTİ VE UYARI SİSTEMİ ---
+    if submit_button:
+        # Kritik Durum Kontrolü (Red Alarm)
+        if new_s > 180 or new_sp < 90 or  new_oedema> 5:
+            st.error(f"🚨 CRITICAL ALERT: Your values (BP: {new_s}, SpO2: {new_sp}%) are at risk! Please contact your doctor.")
+            
+            # Acil Durum WhatsApp Butonu (Anında belirir)
+            emergency_msg = f"EMERGENCY ALERT! Patient John Doe. BP: {new_s}, SpO2: {new_sp}%"
+            st.markdown(f'''<a href="https://wa.me/905XXXXXXXXX?text={emergency_msg}" target="_blank">
+            <button style="background-color:red;color:white;width:100%;padding:15px;border-radius:10px;font-weight:bold;cursor:pointer;">🚨 AUTO-ALERT DOCTOR NOW</button></a>''', unsafe_allow_html=True)
+        else:
+            st.success("✅ Your data has been successfully recorded and is within stable limits.")
+            st.balloons() # Moral desteği için görsel efekt
+
+
+
+
+
+BESINCI ADIMDAN DEVAM
+
+
+
+
+
+
+
+    
     with tabs[1]:
         st.subheader("Camera & Imaging Analysis")
         scan_type = st.selectbox("Scan Type", ["Wound Recovery", "Movement/Range of Motion", "Edema Check"])
@@ -160,6 +273,7 @@ else:
 else:
     st.title("👨‍⚕️ Specialist Dashboard")
     st.dataframe(st.session_state.patient_db, use_container_width=True)
+
 
 
 
