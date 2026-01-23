@@ -35,7 +35,24 @@ df = st.session_state.patient_db
 today = df.iloc[-1]
 yesterday = df.iloc[-2]
 
+# --- 3. SIDEBAR (BURASI TANIMLAMA ALANIDIR) ---
+st.sidebar.title("🏥 EVEYES 360 Hub")
 
+# ÖNCE DEĞİŞKENLERİ TANIMLIYORUZ (Hata almamak için)
+patient_group = st.sidebar.selectbox(
+    "🎯 Target Group", 
+    ["Chronic Care (Active)", "Geriatric", "Post-Op", "Pregnancy", "Pediatric"]
+)
+
+user_role = st.sidebar.selectbox(
+    "🔐 System Access", 
+    ["Patient Portal", "Specialist Dashboard"]
+)
+
+# --- 4. ROL KONTROLÜ (Hata Buradaydı, Şimdi Düzelecek) ---
+if user_role == "Patient Portal":
+    # Buradan aşağısı senin mevcut kodunla devam edebilir...
+    st.sidebar.success("Welcome to Patient Terminal")
 # ==========================================
 # 4. PATIENT PORTAL (Parametreler & Mood Analiz)
 # ==========================================
@@ -119,5 +136,6 @@ else:
     
     if st.button("📤 Dispatch Report to Doctor"):
         st.success("Report transmitted via secure clinical channel.")
+
 
 
