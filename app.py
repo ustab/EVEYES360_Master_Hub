@@ -36,18 +36,37 @@ today = df.iloc[-1]
 yesterday = df.iloc[-2]
 
 # --- 3. SIDEBAR (BURASI TANIMLAMA ALANIDIR) ---
+# --- 3. SIDEBAR: KESİN ÇÖZÜM VE GÖRSEL DÜZELTME ---
 st.sidebar.title("🏥 EVEYES 360 Hub")
 
-# ÖNCE DEĞİŞKENLERİ TANIMLIYORUZ (Hata almamak için)
+# CSS: Yan paneldeki siyah yazıları BEYAZ ve OKUNUR yapar
+st.markdown("""<style>
+    [data-testid="stSidebar"] .stSelectbox label { color: white !important; font-weight: bold; font-size: 1.1rem; }
+    [data-testid="stSidebar"] p { color: white !important; }
+</style>""", unsafe_allow_html=True)
+
+# ÖNEMLİ: Hata almamak için değişkeni en başta tanımlıyoruz
+branch = "General Medicine" 
+
+# 1. HEDEF GRUP
 patient_group = st.sidebar.selectbox(
     "🎯 Target Group", 
     ["Chronic Care (Active)", "Geriatric", "Post-Op", "Pregnancy", "Pediatric"]
 )
 
+# 2. SİSTEM GİRİŞİ
 user_role = st.sidebar.selectbox(
     "🔐 System Access", 
     ["Patient Portal", "Specialist Dashboard"]
 )
+
+# 3. KOŞULLU BRANŞ SEÇİMİ
+if user_role == "Specialist Dashboard":
+    branch = st.sidebar.selectbox(
+        "🧠 Clinical Module", 
+        ["General Medicine", "Metabolic.py", "Neuro.py", "Pediatrics"]
+    )
+
 
 # --- 4. ROL KONTROLÜ (Hata Buradaydı, Şimdi Düzelecek) ---
 if user_role == "Patient Portal":
@@ -136,6 +155,7 @@ else:
     
     if st.button("📤 Dispatch Report to Doctor"):
         st.success("Report transmitted via secure clinical channel.")
+
 
 
 
