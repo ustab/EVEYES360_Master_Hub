@@ -1,10 +1,10 @@
 import streamlit as st
 
-# Güvenli import (therapy modülü henüz yoksa hata vermemesi için)
+# Modülleri güvenli bir şekilde import ediyoruz
 try:
     from modules import metabolic, neuro, pediatric, derma, resp_sonic, therapy
-except ImportError as e:
-    st.warning("Some modules are loading... Please ensure all files in /modules are updated.")
+except ImportError:
+    st.error("Missing Module: Please ensure all files exist in the 'modules' folder.")
 
 st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide", page_icon="🏥")
 
@@ -14,43 +14,42 @@ user_role = st.sidebar.radio("Select Portal", ["Patient Portal", "Specialist Hub
 
 if user_role == "Patient Portal":
     st.sidebar.divider()
-    menu = ["🏠 My Dashboard", "💊 Therapy & Med-Tracker", "📸 Live Clinical Scan"]
+    menu = ["🏠 My Dashboard", "💊 Therapy & Med-Tracker", "🎥 LIVE CLINICAL SCAN"]
     choice = st.sidebar.selectbox("Patient Menu", menu)
 
     if choice == "🏠 My Dashboard":
         st.title("Welcome back, Patient")
-        st.info("Keep your daily logs updated for a better clinical assessment.")
-        st.metric("OMAD Adherence", "95%", "+2%")
+        st.info("Keep your daily logs updated for clinical assessment.")
         
     elif choice == "💊 Therapy & Med-Tracker":
-        # Burada therapy.py içindeki fonksiyonu çağırıyoruz
-        try:
-            therapy.show_therapy()
-        except:
-            st.error("Therapy module is being updated.")
+        therapy.show_therapy()
 
-    elif choice == "📸 Live Clinical Scan":
-        st.title("🎥 Live Patient-Physician Connect")
-        st.markdown("### Visual & Audio Clinical Session")
-        st.write("Record a video showing the area of concern. Describe symptoms while recording.")
+    elif choice == "🎥 LIVE CLINICAL SCAN":
+        st.title("📹 Live Audio-Visual Examination")
+        st.warning("🔔 **Instruction:** When you click 'Start Recording', select 'Camera' and switch to **VIDEO** mode. Talk while recording to capture your voice.")
         
-        scan_mode = st.selectbox("Scanning Area", ["Full Body Scan", "Facial/Edema Scan", "Respiratory/Chest Scan", "Skin/Mole Scan"])
+        # Bu bileşen mobilde doğrudan cihazın kamerasını video/ses kapasitesiyle tetikler
+        clinical_video = st.camera_input("Take a Photo for Quick Reference") 
         
-        # MOBİLDE HEM SES HEM VİDEO KAYDEDEN KISIM
-        clinical_video = st.file_uploader(f"Record {scan_mode} Video (Audio included)", type=["mp4", "mov", "avi"])
+        st.write("--- OR ---")
         
-        if clinical_video:
-            st.video(clinical_video)
-            st.success(f"✅ {scan_mode} video and audio captured successfully.")
-            if st.button("📤 Send Scan to Specialist"):
-                st.info("Sending encrypted data to your physician...")
+        # ASIL VİDEO KAYIT ALANI (Sesli ve Canlı)
+        video_data = st.file_uploader("Click here to Record Live Video & Audio", type=["mp4", "mov", "avi"])
+        
+        if video_data:
+            st.video(video_data)
+            st.success("✅ Video and Audio recorded and uploaded.")
+            if st.button("📤 Sync with Specialist Hub"):
+                st.balloons()
+                st.info("Clinical data sent to your physician.")
 
 else:
-    # --- UZMAN (DOKTOR) PANELİ ---
+    # UZMAN PANELİ
     st.sidebar.divider()
     choice = st.sidebar.selectbox("Specialist Menu", 
                                   ["Metabolic-360", "Neuro-Guard", "Pediatric-Pro", "Derma-Scan", "Resp-Sonic"])
     
+    # Modülleri gösterme mantığı aynı kalıyor
     if choice == "Metabolic-360": metabolic.show_metabolic()
     elif choice == "Neuro-Guard": neuro.show_neuro()
     elif choice == "Pediatric-Pro": pediatric.show_pediatric()
