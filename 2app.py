@@ -25,7 +25,9 @@ if 'patient_db' not in st.session_state:
         'Systolic': [120, 122, 125, 145, 150],
         'Diastolic': [80, 81, 82, 95, 100],
         'Pulse': [72, 74, 75, 88, 92],
+        'BIA_muscle': [22.0, 21.8, 22.1, 23.5, 24.0],
         'BIA_Fat': [22.0, 21.8, 22.1, 23.5, 24.0],
+        'BIA_Oedema': [22.0, 21.8, 22.1, 23.5, 24.0],
         'Mood_Score': [8, 7, 7, 4, 3]
     })
 
@@ -35,7 +37,6 @@ yesterday = df.iloc[-2]
 
 # 3. SIDEBAR: MERKEZİ KONTROL PANELİ
 st.sidebar.title("🏥 EVEYES 360 Hub")
-
 user_role = st.sidebar.selectbox("🔐 System Access", ["Patient Portal", "Specialist Dashboard"])
 patient_group = st.sidebar.selectbox("🎯 Target Group", ["Chronic Care", "Pediatric", "Geriatric", "Post-Op"])
 
@@ -51,7 +52,7 @@ branch_options = [
 ]
 branch = st.sidebar.selectbox("🧠 Clinical Module", branch_options)
 
-# --- 4. HASTA PORTALI (PATIENT PORTAL) ---
+#  4. HASTA PORTALI (PATIENT PORTAL)
 if user_role == "Patient Portal":
     tabs = st.tabs(["🏠 Dashboard", "📝 Vital Entry", "📷 AI Scan"])
     
@@ -74,6 +75,31 @@ if user_role == "Patient Portal":
                 new_data['Weight'], new_data['Height'] = w, h
                 st.session_state.patient_db = pd.concat([df, pd.DataFrame([new_data])], ignore_index=True)
                 st.rerun()
+
+   with tabs[2]: # AI Scan Sekmesi
+        st.subheader("📷 Gelişmiş Yüz ve Vücut Analizi")
+        
+        c_scan1, c_scan2 = st.columns([2, 1])
+        
+        with c_scan1:
+            img_file = st.camera_input("Analiz için Poz Verin (Yüz veya Tüm Vücut)")
+        
+        with c_scan2:
+            st.write("### AI Analiz Sonuçları")
+            if img_file:
+                with st.spinner("Görüntü işleniyor..."):
+                    # Burada simülasyon verileri oluşturuluyor
+                    st.success("✅ Görüntü Alındı")
+                    st.info(f"**Duygu Durumu:** {'Huzurlu' if today['Mood_Score'] > 5 else 'Gergin'}")
+                    
+                    st.write("**Vücut Analizi:**")
+                    st.progress(92, text="Omuz Simetrisi: %92")
+                    st.progress(88, text="Postür Dengesi: %88")
+                    
+                    st.write("**Cilt Analizi:**")
+                    st.write("🟢 Lezyon saptanmadı.")
+            else:
+                st.warning("Lütfen kamerayı başlatın ve analiz için fotoğraf çekin.")
 
 # --- 5. UZMAN PANELİ (SPECIALIST DASHBOARD) ---
 else:
@@ -113,4 +139,5 @@ else:
 st.sidebar.divider()
 if st.sidebar.button("🔄 Reset System"):
     st.session_state.clear()
+
     st.rerun()
