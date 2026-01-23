@@ -1,4 +1,8 @@
 import streamlit as st
+import pandas as pd
+import numpy as np
+
+# Modülleri güvenli çağır
 try:
     from modules import metabolic, neuro, pediatric, derma, resp_sonic, therapy
 except:
@@ -6,46 +10,65 @@ except:
 
 st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide")
 
-if st.sidebar.radio("Portal", ["Patient Terminal", "Specialist Hub"]) == "Patient Terminal":
-    st.title("🏥 Patient Clinical Input Terminal")
-    
-    # --- SECTION 1: VITAL SIGNS & BIOMETRICS ---
-    with st.expander("🌡️ Vital Signs & Body Composition", expanded=True):
-        c1, c2, c3, c4 = st.columns(4)
-        weight = c1.number_input("Weight (kg)", value=70.0)
-        temp = c2.number_input("Temperature (°C)", value=36.5, step=0.1)
-        pulse = c3.number_input("Heart Rate (BPM)", value=75)
-        bia = c4.number_input("BIA (Ohm)", value=500)
-        
-        # BMI & Cachexia (Kaşeksi) Monitoring
-        height = 1.75 # Default or from profile
-        bmi = weight / (height**2)
-        st.info(f"**Current BMI:** {bmi:.1f} | **Muscle Mass Status:** Monitoring for Cachexia Risk")
+# --- ROLE SELECTION ---
+user_role = st.sidebar.radio("Portal", ["Patient Terminal", "Specialist Hub"])
 
-    # --- SECTION 2: PAIN SCALES (VAS & NUMERIC) ---
-    with st.expander("📉 Pain Assessment (Visual & Numeric)", expanded=False):
-        st.write("Rate your pain level:")
-        pain_level = st.select_slider("Numeric Pain Scale (0-10)", options=list(range(11)))
-        
-        # Visual Analog Scale (VAS) with emojis for patient ease
-        st.write("Visual Pain State:")
-        st.radio("VAS Scale", ["😊 No Pain", "😐 Mild", "😟 Moderate", "😫 Severe", "😭 Unbearable"], horizontal=True)
+if user_role == "Patient Terminal":
+    st.sidebar.title("🏥 Patient Menu")
+    menu = ["🏠 Dashboard (My Stats)", "📝 Daily Clinical Input", "💊 Medication Tracker"]
+    choice = st.sidebar.selectbox("Go to:", menu)
 
-    # --- SECTION 3: LIVE MULTI-MODAL SCAN ---
-    with st.expander("🎥 AI Live Scan (Face, Body, Voice)", expanded=False):
-        st.write("Record video for Gait, Facial Symmetry, and Muscle Wasting Analysis.")
-        scan_type = st.multiselect("Scan Targets", ["Face (Edema/Asymmetry)", "Full Body (Gait/Cachexia)", "Voice (Acoustic Analysis)"])
+    if choice == "🏠 Dashboard (My Stats)":
+        st.title("📊 My Health Dashboard")
         
-        clinical_video = st.file_uploader("Start Live Recording (Audio+Video)", type=["mp4", "mov"])
-        clinical_photo = st.camera_input("Quick Snap (Wound/Mole)")
+        # --- ÖZET METRİKLER ---
+        st.subheader("Current Status")
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Current Weight", "70.2 kg", "-0.8 kg")
+        m2.metric("BIA (Resistance)", "510 Ohm", "+5 Ohm")
+        m3.metric("BMI", "22.9", "Stable")
+        m4.metric("Muscle Mass", "High", "Kaşeksi Riski Yok")
 
-    # --- SECTION 4: INTEGRATED REPORTING ---
-    if st.button("🚀 SUBMIT TO CLINICAL HUB"):
-        st.success("Synchronizing: Vitals, Pain Scales, BIA, and Visual Data...")
-        # Burada tüm verileri birleştirip uzman paneline gönderiyoruz
-        st.balloons()
+        # --- KİLO & BİA TAKİP GRAFİĞİ ---
+        st.subheader("📈 Body Composition Trends")
+        chart_data = pd.DataFrame({
+            'Day': range(1, 8),
+            'Weight (kg)': [72.0, 71.5, 71.2, 70.8, 70.5, 70.3, 70.2],
+            'BIA (Ohm)': [480, 485, 490, 495, 500, 505, 510]
+        })
+        
+        tab1, tab2 = st.tabs(["Weight Trend", "BİA & Hydration Trend"])
+        with tab1:
+            st.line_chart(chart_data.set_index('Day')['Weight (kg)'])
+        with tab2:
+            st.area_chart(chart_data.set_index('Day')['BIA (Ohm)'])
+            st.info("💡 BİA değerindeki artış vücut direncinin (kas/yağ dengesi) değişimini gösterir.")
+
+    elif choice == "📝 Daily Clinical Input":
+        # Senin istediğin o devasa giriş formu burada
+        st.title("📝 Clinical Input Terminal")
+        
+        with st.expander("🌡️ Vitals & BİA Data", expanded=True):
+            c1, c2, c3 = st.columns(3)
+            w = c1.number_input("Kilo (kg)", value=70.0)
+            t = c2.number_input("Ateş (°C)", value=36.5)
+            b = c3.number_input("BİA (Ohm)", value=500)
+
+        with st.expander("📉 Pain Scales (VAS & Numeric)", expanded=True):
+            pain_num = st.slider("Ağrı Seviyesi (0-10)", 0, 10, 3)
+            st.write("Görsel Ağrı Skalası (VAS)")
+            st.radio("Durum:", ["😊 Ağrı Yok", "😐 Hafif", "😟 Orta", "😫 Şiddetli", "😭 Dayanılmaz"], horizontal=True)
+
+        with st.expander("🎥 AI Live Scan (Face, Body, Voice)", expanded=False):
+            st.file_uploader("Canlı Video Kaydı (Vücut/Yüz Tarama)", type=["mp4", "mov"])
+
+    elif choice == "💊 Medication Tracker":
+        therapy.show_therapy()
 
 else:
+    # UZMAN PORTALI (Modüller burada)
     st.title("👨‍⚕️ Specialist Analysis Center")
-    # Uzman burada hem videoyu izler hem de gelen BİA ve Ağrı verilerini kıyaslar
-    st.write("Select a module to review incoming multi-modal data.")
+    dept = st.sidebar.selectbox("Branş Modülleri", ["Metabolic", "Neuro", "Derma", "Pediatric"])
+    
+    if dept == "Metabolic": metabolic.show_metabolic()
+    # ... diğer branşlar
