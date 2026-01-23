@@ -57,4 +57,5 @@ if user_role == "Patient Portal":
         
         with st.form("clinical_form"):
             col_a, col_b, col_c = st.columns(3)
-            weight = col_a.number_input("Current Weight (kg)", 30.0, 200
+            weight = col_a.number_input("Current Weight (kg)", 30.0, 200)
+
