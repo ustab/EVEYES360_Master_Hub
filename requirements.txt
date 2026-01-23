@@ -3,3 +3,5 @@ pandas
 numpy
 matplotlib
 Pillow
+streamlit-webrtc
+opencv-python-headless
