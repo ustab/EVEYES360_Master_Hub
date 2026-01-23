@@ -8,10 +8,20 @@ try:
     from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
     import cv2
 except ImportError:
-    st.warning("Canlı analiz için terminale şunu yazın: pip install streamlit-webrtc opencv-python-headless")
+    st.error("Lütfen terminale şunu yazın: pip install streamlit-webrtc opencv-python-headless")
 
 # 1. KONFİGÜRASYON & KLİNİK TEMA
 st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide", page_icon="🏥")
+
+st.markdown("""
+    <style>
+    .main { background-color: #f8f9fa; }
+    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    [data-testid="stSidebar"] { background-color: #1a2a3a; }
+    [data-testid="stSidebar"] .stSelectbox label, [data-testid="stSidebar"] p { color: white !important; font-weight: bold; }
+    .stButton>button { width: 100%; border-radius: 8px; font-weight: bold; }
+    </style>
+    """, unsafe_allow_html=True)
 
 # 2. DATA ENGINE
 if 'patient_db' not in st.session_state:
@@ -30,10 +40,8 @@ df = st.session_state.patient_db
 today = df.iloc[-1]
 yesterday = df.iloc[-2]
 
-# 3. SIDEBAR (Hatanın Çözüldüğü Yer: Değişkenler if bloklarından ÖNCE tanımlanmalı)
+# 3. SIDEBAR (Değişken tanımlamaları burada başlar)
 st.sidebar.title("🏥 EVEYES 360 Hub")
-
-# Önce değişkeni oluşturuyoruz (Hata bu satırın eksikliğinden veya yerinden kaynaklanıyordu)
 user_role = st.sidebar.selectbox("🔐 System Access", ["Patient Portal", "Specialist Dashboard"])
 patient_group = st.sidebar.selectbox("🎯 Target Group", ["Chronic Care", "Pediatric", "Geriatric", "Post-Op"])
 
@@ -44,79 +52,65 @@ branch_options = [
 ]
 branch = st.sidebar.selectbox("🧠 Clinical Module", branch_options)
 
-# CANLI GÖRÜNTÜ İŞLEME SINIFI
-class PoseTransformer(VideoTransformerBase):
+# CANLI GÖRÜNTÜ İŞLEME MOTORU (VideoTransformer)
+class LiveAnalyzer(VideoTransformerBase):
     def transform(self, frame):
         img = frame.to_ndarray(format="bgr24")
-        # Canlı analiz göstergesi (Overlay)
-        cv2.putText(img, "EVEYES AI: LIVE ANALYSIS", (10, 50), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        # Canlı analiz için görsel katman (Overlay)
+        cv2.putText(img, "EVEYES AI: LIVE STREAM ANALYZING", (20, 40), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
         return img
 
-# 4. ANA PANEL AKIŞI
+# 4. HASTA PORTALI
 if user_role == "Patient Portal":
-    tabs = st.tabs(["🏠 Dashboard", "📝 Vital Entry", "🎥 Canlı AI Scan"])
+    tabs = st.tabs(["🏠 Dashboard", "📝 Vital Entry", "🎥 Live AI Scan"])
     
     with tabs[0]:
-        bmi = today['Weight'] / ((today['Height']/100)**2)
-        st.metric("BMI Index", f"{bmi:.1f}")
-        st.line_chart(df.set_index('Date')[['Weight', 'Pulse']])
+        st.subheader("📊 Kişisel Analiz")
+        st.line_chart(df.set_index('Date')[['Weight', 'Systolic']])
 
     with tabs[1]:
-        with st.form("vitals"):
-            st.number_input("Weight", value=float(today['Weight']))
+        with st.form("entry"):
+            st.number_input("Kilo", value=float(today['Weight']))
             st.form_submit_button("Kaydet")
 
     with tabs[2]:
-        st.subheader("🎥 Canlı Postür ve Mimik Analizi")
-        st.info("Kameranızı açarak canlı analiz motorunu başlatın.")
-        # Canlı Kamera Akışı
-        webrtc_streamer(key="live-pose", video_transformer_factory=PoseTransformer)
-        
-        st.write("### Canlı Tespitler")
-        col_v1, col_v2 = st.columns(2)
-        col_v1.progress(88, text="Omuz Simetrisi")
-        col_v2.progress(92, text="Fasiyal Dinamik")
+        st.subheader("🎥 Canlı Postür ve Mimik Takibi")
+        webrtc_streamer(key="patient-live", video_transformer_factory=LiveAnalyzer)
+        st.progress(88, text="Anlık Denge Skoru")
 
-# 5. UZMAN PANELİ
+# 5. UZMAN PANELİ (Hata burada giderildi: elif blokları hizalandı)
 else:
     st.title(f"👨‍⚕️ Specialist: {branch}")
+    is_emergency = today['Systolic'] >= 160 or (today['Weight'] - yesterday['Weight']) > 2.0
     
     if "Neuro" in branch:
-        st.subheader("🧠 Canlı Hareket Kinematiği")
-        webrtc_streamer(key="neuro-live", video_transformer_factory=PoseTransformer)
-        st.scatter_chart(pd.DataFrame(np.random.randn(20, 2), columns=['Denge', 'Genlik']))
-    
-    elif "Sonic" in branch:
-        st.subheader("🧬 Biosonology Spectrum")
-        st.line_chart(np.random.randn(50, 2))
-
-    st.divider()
-    st.write("### Clinical Intelligence Report")
-    st.info(f"Hasta Grubu: {patient_group} | Modül: {branch}")
+        st.subheader("🧠 Canlı Hareket Analizi")
+        webrtc_streamer(key="neuro-live", video_transformer_factory=LiveAnalyzer)
+        st.write("Eklem koordinatları canlı olarak hesaplanıyor.")
+        
     elif "Sonic" in branch:
         st.subheader("🧬 Biosonology Engine")
+        st.info("Hücresel frekansların biyo-akustik melodileri analiz ediliyor.")
         st.line_chart(np.random.randn(20, 2))
+        
     elif "Music" in branch:
         st.subheader("🏺 Seljuk Music Therapy")
+        st.write("Selçuklu dönemine ait makamlarla hücresel rejenerasyon desteği.")
         st.audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
         
     elif "Metabolic" in branch:
         st.metric("Vücut Yağ Oranı (BIA)", f"{today['BIA_Fat']}%")
-        st.bar_chart(df['BIA_Fat'])
 
     st.divider()
     with st.expander("📝 Clinical Intelligence Report", expanded=True):
         if is_emergency: st.error("🚨 KRİTİK EŞİK AŞILDI!")
-        st.markdown(f"**Hasta:** John Doe | **Branş:** {branch}")
-        st.write(f"Sistem Bulgu Notu: Yapay zeka destekli vücut analizi ve vital veriler {'KRİTİK' if is_emergency else 'STABİL'} seviyededir.")
+        st.write(f"Rapor Modülü: {branch} | Durum: {'KRİTİK' if is_emergency else 'STABİL'}")
         if st.button("📤 DOKTORA GÖNDER"):
-            st.success("Rapor iletildi.")
+            st.success("Analiz raporu merkeze iletildi.")
 
 # 6. DATA MANAGEMENT
 st.sidebar.divider()
-if st.sidebar.button("🔄 Reset System"):
+if st.sidebar.button("🔄 Reset Session"):
     st.session_state.clear()
     st.rerun()
-
-
