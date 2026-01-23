@@ -1,55 +1,50 @@
 import streamlit as st
 import pandas as pd
-import time
 
 def show_pediatric():
-    st.title("👶 Pediatric-Pro: Growth & Development")
-    st.markdown("Clinical tracking for physical growth and neurodevelopmental milestones.")
+    st.title("👶 Pediatric-Pro: Neuro-Developmental Video Analysis")
+    st.markdown("Monitor developmental milestones and physical growth through visual evidence.")
 
-    tab1, tab2 = st.tabs(["📏 Physical Growth", "🧠 Neurodevelopmental (M-CHAT)"])
+    # Uzman Analiz Paneli
+    col1, col2 = st.columns([2, 1])
 
-    with tab1:
-        st.subheader("Physical Growth Analysis")
-        c1, c2, c3 = st.columns(3)
-        age = c1.number_input("Age (Months)", min_value=0, max_value=60, value=12)
-        weight = c2.number_input("Weight (kg)", value=10.0)
-        height = c3.number_input("Height (cm)", value=75.0)
+    with col1:
+        st.subheader("📹 Clinical Observation Video")
+        st.info("💡 Review video for: Eye contact, social smiling, motor coordination, and primitive reflexes.")
+        ped_video = st.file_uploader("Upload Pediatric Observation Video", type=["mp4", "mov"])
         
-        # Growth Chart Simulation
-        st.write("**Growth Percentile Trend**")
-        chart_data = pd.DataFrame({
-            "Months": [0, 12, 24, 36, 48, 60],
-            "WHO Standard (kg)": [3.5, 9.5, 12.2, 14.3, 16.3, 18.3],
-            "Current Child (kg)": [3.5, weight if age == 12 else 9.5, 12.2, 14.3, 16.3, 18.3]
-        })
-        st.line_chart(chart_data.set_index("Months"))
-        
-        
+        if ped_video:
+            st.video(ped_video)
+            st.caption("Scan video for spontaneous movements or behavioral red flags.")
 
-    with tab2:
-        st.subheader("Live Clinical Observation")
-        st.write("Use the camera to observe the child's interaction, eye contact, and motor response.")
+    with col2:
+        st.subheader("🧠 Developmental Assessment")
         
-        # Canlı Kamera Girişi
-        child_frame = st.camera_input("Capture Child's Behavior")
+        # M-CHAT & Milestone Puanlaması
+        eye_contact = st.select_slider("Social Interaction / Eye Contact", options=["Absent", "Poor", "Occasional", "Typical"])
+        motor_milestone = st.selectbox("Motor Milestone Status", ["Delayed", "Emerging", "Age-Appropriate", "Advanced"])
         
-        if child_frame:
-            st.image(child_frame, caption="Behavioral Frame Captured")
-            st.success("Visual data logged for developmental review.")
-
         st.divider()
-        st.subheader("M-CHAT Screening Questions")
-        q1 = st.radio("Does the child look you in the eye when you call their name?", ["Yes", "No"])
-        q2 = st.radio("Does the child point to things to show interest?", ["Yes", "No"])
-        
-        if st.button("Assess Screening Risk"):
-            if q1 == "No" or q2 == "No":
-                st.warning("⚠️ **Alert:** Potential red flags detected. Refer to a Developmental Pediatrician.")
-            else:
-                st.success("✅ Interaction appears normal for this age group.")
+        st.subheader("📏 Physical Metrics")
+        weight = st.number_input("Weight (kg)", value=10.0)
+        height = st.number_input("Height (cm)", value=75.0)
+        head_circ = st.number_input("Head Circumference (cm)", value=45.0)
 
-    # Reporting
+    # Büyüme Eğrisi Analizi
     st.divider()
-    if st.button("📲 Generate Pediatric Report"):
-        report = f"Pediatric Report\nAge: {age}mo\nWeight: {weight}kg\nRisk: {'High' if q1 == 'No' else 'Low'}"
-        st.download_button("Download Report (TXT)", report, file_name="pediatric_report.txt")
+    st.subheader("📈 WHO Growth Percentile Simulation")
+    # Örnek veri seti
+    growth_data = pd.DataFrame({
+        'Month': [0, 6, 12, 18, 24],
+        'WHO 50th Percentile': [3.5, 7.5, 9.5, 11.0, 12.2],
+        'Patient Growth': [3.5, 7.2, 9.2, 10.5, weight]
+    })
+    st.line_chart(growth_data.set_index('Month'))
+    
+
+    # Klinik Karar ve Raporlama
+    if st.button("📋 Generate Pediatric Development Report"):
+        risk = "High" if eye_contact in ["Absent", "Poor"] else "Normal"
+        summary = f"PEDIATRIC REPORT\nStatus: {motor_milestone}\nSocial Risk: {risk}\nBMI/Growth: Tracked"
+        st.code(summary)
+        st.success("Report ready for physician's final signature.")
