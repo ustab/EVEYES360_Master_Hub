@@ -2,61 +2,98 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-# CANLI ANALİZ İÇİN GEREKLİ KÜTÜPHANE (Uygulamanın başına ekle)
+
+# CANLI ANALİZ İÇİN GEREKLİ KÜTÜPHANELER
 try:
     from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
     import cv2
 except ImportError:
-    st.error("Lütfen terminale şunu yazın: pip install streamlit-webrtc opencv-python-headless")
+    st.warning("Canlı analiz için terminale şunu yazın: pip install streamlit-webrtc opencv-python-headless")
 
-# 1. KONFİGÜRASYON (Aynı kalıyor)
+# 1. KONFİGÜRASYON & KLİNİK TEMA
 st.set_page_config(page_title="EVEYES 360 Platinum", layout="wide", page_icon="🏥")
 
-# ... [Önceki CSS ve Veri Motoru Bölümleri Burada Aynı Şekilde Duruyor] ...
+# 2. DATA ENGINE
+if 'patient_db' not in st.session_state:
+    st.session_state.patient_db = pd.DataFrame({
+        'Date': [(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(4, -1, -1)],
+        'Weight': [75.0, 74.8, 75.2, 77.5, 78.0],
+        'Height': [175, 175, 175, 175, 175],
+        'Systolic': [120, 122, 125, 145, 150],
+        'Diastolic': [80, 81, 82, 95, 100],
+        'Pulse': [72, 74, 75, 88, 92],
+        'BIA_Fat': [22.0, 21.8, 22.1, 23.5, 24.0],
+        'Mood_Score': [8, 7, 7, 4, 3]
+    })
 
-# 4. HASTA PORTALI
+df = st.session_state.patient_db
+today = df.iloc[-1]
+yesterday = df.iloc[-2]
+
+# 3. SIDEBAR (Hatanın Çözüldüğü Yer: Değişkenler if bloklarından ÖNCE tanımlanmalı)
+st.sidebar.title("🏥 EVEYES 360 Hub")
+
+# Önce değişkeni oluşturuyoruz (Hata bu satırın eksikliğinden veya yerinden kaynaklanıyordu)
+user_role = st.sidebar.selectbox("🔐 System Access", ["Patient Portal", "Specialist Dashboard"])
+patient_group = st.sidebar.selectbox("🎯 Target Group", ["Chronic Care", "Pediatric", "Geriatric", "Post-Op"])
+
+branch_options = [
+    "General Medicine", "Neuro (neuro.py)", "Metabolic (metabolic.py)", 
+    "Pediatrics (pediatric.py)", "Dermatology (derma.py)",
+    "Sonic Bio-Analysis (resp_sonic.py)", "Music Psychotherapy (therapy.py)"
+]
+branch = st.sidebar.selectbox("🧠 Clinical Module", branch_options)
+
+# CANLI GÖRÜNTÜ İŞLEME SINIFI
+class PoseTransformer(VideoTransformerBase):
+    def transform(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+        # Canlı analiz göstergesi (Overlay)
+        cv2.putText(img, "EVEYES AI: LIVE ANALYSIS", (10, 50), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        return img
+
+# 4. ANA PANEL AKIŞI
 if user_role == "Patient Portal":
-    tabs = st.tabs(["🏠 Dashboard", "📝 Vital Entry", "📷 Canlı AI Scan"])
+    tabs = st.tabs(["🏠 Dashboard", "📝 Vital Entry", "🎥 Canlı AI Scan"])
     
-    # ... [Tab 0 ve Tab 1 Aynı Kalıyor] ...
+    with tabs[0]:
+        bmi = today['Weight'] / ((today['Height']/100)**2)
+        st.metric("BMI Index", f"{bmi:.1f}")
+        st.line_chart(df.set_index('Date')[['Weight', 'Pulse']])
+
+    with tabs[1]:
+        with st.form("vitals"):
+            st.number_input("Weight", value=float(today['Weight']))
+            st.form_submit_button("Kaydet")
 
     with tabs[2]:
-        st.subheader("🎥 Canlı Yüz ve Vücut Analiz Motoru")
-        st.info("Canlı video akışında postür simetrisi ve mikro-mimik takibi yapılır.")
+        st.subheader("🎥 Canlı Postür ve Mimik Analizi")
+        st.info("Kameranızı açarak canlı analiz motorunu başlatın.")
+        # Canlı Kamera Akışı
+        webrtc_streamer(key="live-pose", video_transformer_factory=PoseTransformer)
         
-        # CANLI VİDEO İŞLEME SINIFI
-        class VideoProcessor(VideoTransformerBase):
-            def transform(self, frame):
-                img = frame.to_ndarray(format="bgr24")
-                # Basit bir canlı görsel efekt: Yüz bölgesini temsil eden bir kutu çiziyoruz
-                cv2.rectangle(img, (100, 100), (300, 300), (0, 255, 0), 2)
-                cv2.putText(img, "EVEYES AI: ANALYZING...", (10, 30), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                return img
-
-        # WebRTC Streamer (Canlı Kamera Akışı)
-        webrtc_streamer(key="live-scan", video_processor_factory=VideoProcessor)
-        
-        # Canlı Veri Panelcikleri
-        v_col1, v_col2, v_col3 = st.columns(3)
-        v_col1.metric("Anlık Postür Dengesi", "%89", "Stable")
-        v_col2.metric("Solunum Ritmi (Optik)", "16 bpm", "+1")
-        v_col3.metric("Fasiyal Duygu", "Neutral")
+        st.write("### Canlı Tespitler")
+        col_v1, col_v2 = st.columns(2)
+        col_v1.progress(88, text="Omuz Simetrisi")
+        col_v2.progress(92, text="Fasiyal Dinamik")
 
 # 5. UZMAN PANELİ
 else:
     st.title(f"👨‍⚕️ Specialist: {branch}")
     
     if "Neuro" in branch:
-        st.subheader("🧠 Canlı Nörolojik Gait Analizi")
-        # Uzman için canlı takip modülü
-        st.warning("Uzman Paneli: Canlı video üzerinden eklem açıları hesaplanıyor...")
-        webrtc_streamer(key="specialist-scan", video_processor_factory=VideoProcessor)
-        # Eklem verisi simülasyonu
-        st.write("### Anlık Eklem Açı Verisi (Kinematik)")
-        kinematic_data = pd.DataFrame(np.random.randint(140, 180, size=(10, 2)), columns=['Sağ Diz Açısı', 'Sol Diz Açısı'])
-        st.line_chart(kinematic_data)
-    # ... [Diğer Branşlar Aynı Kalıyor] ...
+        st.subheader("🧠 Canlı Hareket Kinematiği")
+        webrtc_streamer(key="neuro-live", video_transformer_factory=PoseTransformer)
+        st.scatter_chart(pd.DataFrame(np.random.randn(20, 2), columns=['Denge', 'Genlik']))
+    
+    elif "Sonic" in branch:
+        st.subheader("🧬 Biosonology Spectrum")
+        st.line_chart(np.random.randn(50, 2))
+
+    st.divider()
+    st.write("### Clinical Intelligence Report")
+    st.info(f"Hasta Grubu: {patient_group} | Modül: {branch}")
     elif "Sonic" in branch:
         st.subheader("🧬 Biosonology Engine")
         st.line_chart(np.random.randn(20, 2))
@@ -81,4 +118,5 @@ st.sidebar.divider()
 if st.sidebar.button("🔄 Reset System"):
     st.session_state.clear()
     st.rerun()
+
 
