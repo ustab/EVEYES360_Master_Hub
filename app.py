@@ -36,7 +36,7 @@ today = df.iloc[-1]
 yesterday = df.iloc[-2]
 
 # --- 3. SIDEBAR: HEDEF GRUPLAR & MODÜLER YAPI ---
-st.sidebar.title("🏥 EVEYES 360 Hub")
+
 patient_group = st.sidebar.selectbox("🎯 Target Group", 
     ["Chronic Care (Active)", "Geriatric", "Post-Op", "Pregnancy", "Pediatric (Growth Tracking)"])
 
@@ -128,3 +128,4 @@ else:
     
     if st.button("📤 Dispatch Report to Doctor"):
         st.success("Report transmitted via secure clinical channel.")
+
