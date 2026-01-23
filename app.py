@@ -12,10 +12,23 @@ if 'patient_db' not in st.session_state:
         'Date': [datetime.now() - timedelta(days=i) for i in range(5, 0, -1)],
         'Weight': [75.0, 74.8, 75.2, 77.5, 78.0], # Simulated edema spike
         'BIA_Muscle': [32.0, 31.9, 32.1, 32.0, 31.8],
+        'BIA_Oedema': [32.0, 31.9, 32.1, 32.0, 31.8],
         'Systolic': [120, 122, 125, 145, 150], # Simulated hypertension trend
         'SpO2': [98, 97, 98, 96, 94], # Simulated respiratory decline
         'Pain': [4, 4, 5, 7, 8]
     })
+# --- 3. ANALİZ MOTORU (Kritik Değişkenler) ---
+# Kodun ilerleyen yerlerinde hata almamak için farkları burada hesaplıyoruz
+df = st.session_state.patient_db
+today = df.iloc[-1]      # Listenin en sonundaki (bugünkü) veri
+yesterday = df.iloc[-2]  # Listenin sondan ikinci (dünkü) verisi
+# KARŞILAŞTIRMA DEĞİŞKENLERİ
+w_diff = today['Weight'] - yesterday['Weight']
+s_diff = today['Systolic'] - yesterday['Systolic']
+b_diff = today['BIA_Muscle'] - yesterday['BIA_Muscle']
+p_diff = today['Pain'] - yesterday['Pain']
+
+
 
 # --- SIDEBAR NAVIGATION ---
 st.sidebar.title("🏥 EVEYES 360 RPM")
@@ -147,6 +160,7 @@ else:
 else:
     st.title("👨‍⚕️ Specialist Dashboard")
     st.dataframe(st.session_state.patient_db, use_container_width=True)
+
 
 
 
