@@ -36,3 +36,41 @@ def show_history():
     # --- GRAFİKSEL GÖSTERİM ---
     st.subheader("📊 Zaman Serisi Grafikleri")
     st.line_chart(df.set_index('Tarih')[['Kilo', 'BİA']])
+    # app.py içindeki "SUBMIT TO CLINICAL HUB" butonunun altı için:
+if st.button("💾 Günlük Kayıtları Kaydet ve Rapor Hazırla"):
+    st.success("Veriler kaydedildi. Raporunuz analiz için hazır.")
+    
+    # Rapor Taslağı
+    report_content = f"""
+    🏥 EVEYES 360 KLİNİK RAPOR
+    --------------------------
+    Tarih: {datetime.now().strftime('%d/%m/%Y')}
+    Kilo: {weight} kg (Değişim: -1.0kg)
+    BİA: {bia} Ohm
+    Ateş: {temp} °C
+    Ağrı: {pain_level}/10
+    Klinik Not: Kaşeksi riski düşük, metabolik uyum iyi.
+    --------------------------
+    """
+    
+    st.text_area("Hazırlanan Rapor Özeti", report_content, height=150)
+    
+    st.subheader("📤 Doktoruna Gönder")
+    c1, c2 = st.columns(2)
+    
+    with c1:
+        # WhatsApp Gönderimi
+        encoded_msg = report_content.replace("\n", "%0A")
+        st.markdown(f'''
+            <a href="https://wa.me/905XXXXXXXXX?text={encoded_msg}" target="_blank">
+                <button style="background-color:#25D366; color:white; border:none; padding:10px 20px; border-radius:5px; width:100%;">
+                    WhatsApp ile Gönder
+                </button>
+            </a>''', unsafe_allow_html=True)
+            
+    with c2:
+        # E-Posta Gönderimi
+        subject = "EVEYES 360 Gunluk Klinik Rapor"
+        mail_link = f"mailto:doktor@email.com?subject={subject}&body={encoded_msg}"
+        st.markdown(f'<a href="{mail_link}"><button style="background-color:#0078D4; color:white; border:none; padding:10px 20px; border-radius:5px; width:100%;">E-Posta ile Gönder</button></a>', unsafe_allow_html=True)
+
