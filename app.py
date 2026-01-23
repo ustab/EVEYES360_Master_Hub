@@ -17,7 +17,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. DATA ENGINE & ENHANCED PARAMETERS (Boy, BMI, BIA Analizi) ---
+# 2. DATA ENGINE & ENHANCED PARAMETERS (Boy, BMI, BIA Analizi) ---
 if 'patient_db' not in st.session_state:
     st.session_state.patient_db = pd.DataFrame({
         'Date': [(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(4, -1, -1)],
@@ -171,22 +171,109 @@ else: # Yani user_role == "Specialist Dashboard" ise
         n2.metric("Neuro-Symmetry", "94%", "Optimal")
         n3.metric("Communication", "Typical" if mood > 5 else "Atypical")
         
+       
+       
         st.area_chart(df.set_index('Date')[['Mood_Score']])
+    # --- 6. AKILLI RAPOR & DR. ALARM SİSTEMİ ---
+        st.divider()
+        st.subheader("📝 Clinical Intelligence Report")
 
-    # --- 6. GLOBAL AI SUMMARY (Tüm Branşlar İçin Raporlama) ---
-    st.divider()
-    with st.expander("📝 View AI Clinical Summary", expanded=True):
-        report = (
-            f"**ANALYSIS FOR:** John Doe | **BRANCH:** {branch}\n\n"
-            f"Patient is currently showing **{status if 'status' in locals() else 'Stable'}** trends. "
-            f"Latest Systolic BP: {today['Systolic']} mmHg. "
-            f"Mood/Gait tracking suggests {'routine follow-up' if today['Mood_Score'] > 5 else 'urgent neurological review'}."
-        )
-        st.markdown(report)
-        if st.button("📤 Dispatch Secure Report"):
-            st.success(f"Encrypted report sent to {branch} department.")
+# Rapor Mantığı ve Otomatik Alarm Kontrolü
+        weight_delta = today['Weight'] - yesterday['Weight']
+        is_emergency = False
+        emergency_msg = ""
+
+# Otomatik Acil Durum Kontrolleri (Tıbbi Algoritma)
+if today['Systolic'] >= 160:
+    is_emergency = True
+    emergency_msg = "🚨 KRİTİK TANSİYON YÜKSEKLİĞİ!"
+elif weight_delta > 2.0:
+    is_emergency = True
+    emergency_msg = "🚨 ANİ KİLO ARTIŞI (ÖDEM RİSKİ)!"
+elif today['Mood_Score'] <= 3:
+    is_emergency = True
+    emergency_msg = "🚨 NÖROLOJİK / MOOD KRİZİ!"
+
+# 1. EKRANDA GÖRÜNEN RAPOR ALANI
+with st.expander("📄 Rapor Detayını Görüntüle", expanded=True):
+    if is_emergency:
+        st.error(f"**ACİL DURUM UYARISI:** {emergency_msg}")
     
-# --- 7. DATA PERSISTENCE & EXPORT (Opsiyonel) ---
+    report_text = f"""
+    **HASTA:** John Doe  
+    **TARİH:** {today['Date']}  
+    **BRANŞ:** {branch}  
+    
+    **KLİNİK ANALİZ:** - Mevcut Kilo: {today['Weight']} kg ({weight_delta:+.1f} kg değişim)
+    - Tansiyon: {today['Systolic']}/{today['Diastolic']} mmHg
+    - Mood/Gait Skoru: {today['Mood_Score']}/10
+    
+    **AI YORUMU:** {branch} verileri incelendiğinde, hastanın genel durumu 
+    {'KRİTİK' if is_emergency else 'STABİL'} olarak değerlendirilmiştir.
+    """
+    st.markdown(report_text)
+
+# 2. DOKTORA GÖNDERME BUTONU VE OTOMATİK AKIŞ
+col_send, col_status = st.columns([1, 2])
+
+with col_send:
+    if st.button("📤 DOKTORUMA GÖNDER"):
+        # Burada gerçek bir mail/SMS API'sı çalışabilir
+        st.success("✅ Rapor başarıyla Dr. Panelimize iletildi.")
+
+with col_status:
+    if is_emergency:
+        st.warning("⚠️ Acil durum tespit edildiği için sistem otomatik bildirim oluşturdu.")
+        # Buraya otomatik SMS/Bildirim gönderme kodu gelebilir
+# ---------------------------------------------------------
+    # 6. BÖLÜM: AKILLI RAPOR & DR. ALARM SİSTEMİ (BURAYI YAPIŞTIR)
+    # ---------------------------------------------------------
+    st.divider()
+    st.subheader("📝 Clinical Intelligence Report")
+
+    # 1. Veriyi Hesapla (Hata almamak için önce bu satır gelmeli)
+    weight_delta = float(today['Weight'] - yesterday['Weight'])
+    
+    # 2. Acil Durum Kontrol Algoritması
+    is_emergency = False
+    emergency_msg = ""
+
+    if today['Systolic'] >= 160:
+        is_emergency = True
+        emergency_msg = "🚨 KRİTİK TANSİYON YÜKSEKLİĞİ!"
+    elif weight_delta > 2.0:
+        is_emergency = True
+        emergency_msg = "🚨 ANİ KİLO ARTIŞI (ÖDEM RİSKİ)!"
+    elif today['Mood_Score'] <= 3:
+        is_emergency = True
+        emergency_msg = "🚨 NÖROLOJİK / MOOD KRİZİ!"
+
+    # 3. Raporun Ekranda Görünmesi
+    with st.expander("📄 Rapor Detayını Görüntüle", expanded=True):
+        if is_emergency:
+            st.error(f"**ACİL DURUM UYARISI:** {emergency_msg}")
+        
+        st.markdown(f"""
+        **HASTA:** John Doe | **TARİH:** {today['Date']} | **BRANŞ:** {branch}
+        
+        **KLİNİK ANALİZ:**
+        - **Kilo Değişimi:** {weight_delta:+.1f} kg
+        - **Tansiyon:** {today['Systolic']}/{today['Diastolic']} mmHg
+        - **Genel Durum:** {'🔴 KRİTİK' if is_emergency else '🟢 STABİL'}
+        """)
+
+    # 4. Doktora Gönder Butonları
+    c_send, c_status = st.columns([1, 2])
+    
+    with c_send:
+        if st.button("📤 DOKTORUMA GÖNDER"):
+            st.success("✅ Rapor başarıyla Dr. Panelimize iletildi.")
+
+    with c_status:
+        if is_emergency:
+            st.warning("⚠️ Kritik eşik aşıldığı için sistem otomatik bildirim oluşturdu.")
+    
+# 7. DATA PERSISTENCE & EXPORT (Opsiyonel) ---
 st.sidebar.divider()
 st.sidebar.subheader("💾 Data Management")
 
@@ -202,11 +289,3 @@ st.sidebar.download_button(
 if st.sidebar.button("🔄 Reset Session Data"):
     st.session_state.clear()
     st.rerun()
-
-
-
-
-
-
-
-
