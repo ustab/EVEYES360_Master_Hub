@@ -35,18 +35,36 @@ df = st.session_state.patient_db
 today = df.iloc[-1]
 yesterday = df.iloc[-2]
 
-# --- 3. SIDEBAR (BURASI TANIMLAMA ALANIDIR) ---
-# --- 3. SIDEBAR: KESİN ÇÖZÜM VE GÖRSEL DÜZELTME ---
+# --- 3. SIDEBAR: AKILLI VE BAĞLANTILI YAPI ---
 st.sidebar.title("🏥 EVEYES 360 Hub")
 
-# CSS: Yan paneldeki siyah yazıları BEYAZ ve OKUNUR yapar
-st.markdown("""<style>
-    [data-testid="stSidebar"] .stSelectbox label { color: white !important; font-weight: bold; font-size: 1.1rem; }
-    [data-testid="stSidebar"] p { color: white !important; }
-</style>""", unsafe_allow_html=True)
+# 1. HEDEF GRUP (Ana Belirleyici)
+patient_group = st.sidebar.selectbox(
+    "🎯 Target Group", 
+    ["Chronic Care", "Pediatric", "Geriatric", "Post-Op"]
+)
 
-# ÖNEMLİ: Hata almamak için değişkeni en başta tanımlıyoruz
-branch = "General Medicine" 
+# 2. SİSTEM GİRİŞİ
+user_role = st.sidebar.selectbox(
+    "🔐 System Access", 
+    ["Patient Portal", "Specialist Dashboard"]
+)
+
+# 3. AKILLI BRANŞ FİLTRELEME (Uyumsuzluğu Çözen Kısım)
+# Hedef gruba göre doktorun göreceği modülleri kısıtlıyoruz
+if user_role == "Specialist Dashboard":
+    if patient_group == "Pediatric":
+        module_options = ["Pediatric Growth", "Neuro-Developmental", "Genetic Screening"]
+    elif patient_group == "Chronic Care":
+        module_options = ["Metabolic.py", "Cardio-Renal", "General Medicine"]
+    elif patient_group == "Geriatric":
+        module_options = ["Neuro.py (Dementia)", "Mobility & Gait", "Polypharmacy"]
+    else:
+        module_options = ["General Medicine", "Custom Analysis"]
+        
+    branch = st.sidebar.selectbox("🧠 Clinical Module", module_options)
+else:
+    branch = "General Medicine" # NameError önleyici
 
 # 1. HEDEF GRUP
 patient_group = st.sidebar.selectbox(
@@ -155,6 +173,7 @@ else:
     
     if st.button("📤 Dispatch Report to Doctor"):
         st.success("Report transmitted via secure clinical channel.")
+
 
 
 
