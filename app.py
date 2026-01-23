@@ -13,7 +13,8 @@ if 'patient_db' not in st.session_state:
         'Weight': [75.0, 74.8, 75.2, 77.5, 78.0], # Simulated edema spike
         'BIA_Muscle': [32.0, 31.9, 32.1, 32.0, 31.8],
         'Systolic': [120, 122, 125, 145, 150], # Simulated hypertension trend
-        'SpO2': [98, 97, 98, 96, 94] # Simulated respiratory decline
+        'SpO2': [98, 97, 98, 96, 94], # Simulated respiratory decline
+        'Pain': [4, 4, 5, 7, 8]
     })
 
 # --- SIDEBAR NAVIGATION ---
@@ -91,8 +92,6 @@ else:
     if last_spo2 < 95:
         st.error(f"🫁 **Correlation Alert:** SpO2 has dropped to {last_spo2}%. Cross-referencing with weight gain suggests fluid overload.")
 
-    
-
     # Visualizing Correlations
     st.subheader("📈 Multi-Parametric Correlation")
     chart_choice = st.multiselect("Select Parameters to Overlay", ["Weight", "Systolic", "SpO2", "BIA_Muscle"], default=["Weight", "Systolic"])
@@ -106,4 +105,48 @@ else:
         - Muscle Mass: Stable (BIA: {df['BIA_Muscle'].iloc[-1]}kg), confirming weight gain is likely fluid.
         - RECOMMENDATION: Adjust Diuretic Dosage / Immediate Clinical Visit.
         """)
+        # --- TAB 3: STATISTICS & AUTO-REPORTING ---
+    with tabs[2]:
+        st.subheader("📊 Clinical Statistical Report & Auto-Dispatch")
+        
+        if st.button("📝 Generate & Analyze Statistics"):
+            df = st.session_state.patient_db
+            avg_bp = df['Systolic'].mean()
+            weight_trend = "INCREASING" if w_diff > 0 else "DECREASING"
+            
+            # Formatted Report
+            report_body = (
+                f"🏥 EVEYES 360 CLINICAL ANALYTICS\n"
+                f"--------------------------------------\n"
+                f"Date: {datetime.now().strftime('%Y-%m-%d')}\n\n"
+                f"1. STATISTICAL SUMMARY:\n"
+                f"- Weight Trend: {weight_trend} ({w_diff:+.1f} kg in 24h)\n"
+                f"- Mean Systolic BP (5-Day): {avg_bp:.1f} mmHg\n"
+                f"- Current SpO2: {df['SpO2'].iloc[-1]}%\n\n"
+                f"2. AI INTERPRETATION:\n"
+                f"Weight gain detected without muscle mass increase.\n"
+                f"Potential FLUID RETENTION (Edema) suspected.\n"
+                f"Rising BP and falling SpO2 require urgent review.\n"
+                f"--------------------------------------"
+            )
+            
+            st.code(report_body)
+            
+            # --- AUTO-DISPATCH ---
+            encoded_msg = report_body.replace("\n", "%0A").replace(" ", "%20")
+            col_wa, col_mail = st.columns(2)
+            
+            with col_wa:
+                st.markdown(f'''<a href="https://wa.me/905XXXXXXXXX?text={encoded_msg}" target="_blank">
+                <button style="background-color:#25D366;color:white;width:100%;padding:12px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;">🚀 Send via WhatsApp</button></a>''', unsafe_allow_html=True)
+            
+            with col_mail:
+                mail_url = f"mailto:doctor@hospital.com?subject=Clinical_Alert&body={encoded_msg}"
+                st.markdown(f'<a href="{mail_url}"><button style="background-color:#0078D4;color:white;width:100%;padding:12px;border-radius:10px;border:none;font-weight:bold;cursor:pointer;">📧 Send via Email</button></a>', unsafe_allow_html=True)
+
+else:
+    st.title("👨‍⚕️ Specialist Dashboard")
+    st.dataframe(st.session_state.patient_db, use_container_width=True)
+
+
 
