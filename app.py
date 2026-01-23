@@ -35,15 +35,6 @@ df = st.session_state.patient_db
 today = df.iloc[-1]
 yesterday = df.iloc[-2]
 
-# --- 3. SIDEBAR: HEDEF GRUPLAR & MODÜLER YAPI ---
-
-patient_group = st.sidebar.selectbox("🎯 Target Group", 
-    ["Chronic Care (Active)", "Geriatric", "Post-Op", "Pregnancy", "Pediatric (Growth Tracking)"])
-
-user_role = st.sidebar.selectbox("System Access", ["Patient Portal", "Specialist Dashboard"])
-
-# Modüler Branş Seçimi (Specialist için)
-branch = st.sidebar.selectbox("Clinical Module", ["General Medicine", "Metabolic.py", "Neuro.py", "Pediatrics"])
 
 # ==========================================
 # 4. PATIENT PORTAL (Parametreler & Mood Analiz)
@@ -128,4 +119,5 @@ else:
     
     if st.button("📤 Dispatch Report to Doctor"):
         st.success("Report transmitted via secure clinical channel.")
+
 
