@@ -35,7 +35,48 @@ df = st.session_state.patient_db
 today = df.iloc[-1]
 yesterday = df.iloc[-2]
 
+# ==========================================
+# 3. SIDEBAR: MERKEZİ KONTROL (Hataları Çözen Bölüm)
+# ==========================================
+st.sidebar.title("🏥 EVEYES 360 Hub")
 
+# CSS: Siyah yazıları BEYAZ yapar (image_be5791 hatası çözümü)
+st.markdown("""<style>
+    [data-testid="stSidebar"] .stSelectbox label { color: white !important; font-weight: bold; }
+    [data-testid="stSidebar"] p { color: white !important; }
+</style>""", unsafe_allow_html=True)
+
+# Değişkenleri en başta tanımlayarak NameError'ı engelliyoruz
+branch = "General Medicine" 
+
+# 1. HEDEF GRUP
+patient_group = st.sidebar.selectbox(
+    "🎯 Target Group", 
+    ["Chronic Care", "Pediatric", "Geriatric", "Pregnancy", "Post-Op"],
+    key="fixed_tg"
+)
+
+# 2. SİSTEM GİRİŞİ (Satır 41'deki hatayı çözen satır)
+user_role = st.sidebar.selectbox(
+    "🔐 System Access", 
+    ["Patient Portal", "Specialist Dashboard"],
+    key="fixed_role"
+)
+
+# 3. BRANŞ SEÇİMİ (Satır 111'deki hatayı çözen satır)
+if user_role == "Specialist Dashboard":
+    if patient_group == "Pediatric":
+        options = ["Pediatrics", "Growth & Development", "Genetic Screening"]
+    elif patient_group == "Chronic Care":
+        options = ["Metabolic.py", "Cardio-Renal", "General Medicine"]
+    elif patient_group == "Geriatric":
+        options = ["Neuro.py", "Mobility & Gait", "Dementia Care"]
+    else:
+        options = ["General Medicine", "Custom Module"]
+    
+    branch = st.sidebar.selectbox("🧠 Clinical Module", options, key="fixed_branch")
+
+st.sidebar.divider()
 
 
 if user_role == "Patient Portal":
@@ -118,6 +159,7 @@ else:
     
     if st.button("📤 Dispatch Report to Doctor"):
         st.success("Report transmitted via secure clinical channel.")
+
 
 
 
